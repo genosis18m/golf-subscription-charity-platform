@@ -1,12 +1,9 @@
 'use client';
 
-/**
- * Dashboard Sidebar — dark design system, collapses to bottom nav on mobile.
- */
-
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { DASHBOARD_NAV_LINKS } from '@/constants';
+import { createClient } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
 import type { Profile } from '@/types';
 
@@ -15,12 +12,12 @@ interface SidebarProps {
 }
 
 const NAV_ICONS: Record<string, string> = {
-  '/dashboard':           '▣',
-  '/dashboard/scores':    '⛳',
-  '/dashboard/draws':     '🎱',
-  '/dashboard/charity':   '💚',
-  '/dashboard/winnings':  '🏆',
-  '/dashboard/settings':  '⚙',
+  '/dashboard': 'home',
+  '/dashboard/scores': 'golf_course',
+  '/dashboard/draws': 'redeem',
+  '/dashboard/charity': 'volunteer_activism',
+  '/dashboard/winnings': 'emoji_events',
+  '/dashboard/settings': 'settings',
 };
 
 export function Sidebar({ profile }: SidebarProps) {
@@ -28,16 +25,21 @@ export function Sidebar({ profile }: SidebarProps) {
   const router = useRouter();
 
   async function handleSignOut() {
-    await fetch('/api/auth/demo', { method: 'DELETE' });
+    const supabase = createClient();
+
+    await Promise.allSettled([
+      supabase.auth.signOut(),
+      fetch('/api/auth/demo', { method: 'DELETE' }),
+    ]);
+
     router.push('/');
     router.refresh();
   }
 
   return (
     <>
-      {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
       <aside
-        className="hidden lg:flex flex-col shrink-0"
+        className="hidden shrink-0 lg:flex lg:flex-col"
         style={{
           width: '224px',
           minHeight: '100vh',
@@ -49,35 +51,55 @@ export function Sidebar({ profile }: SidebarProps) {
           overflow: 'hidden auto',
         }}
       >
-        {/* Logo */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <span style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              border: '1px solid rgba(74,255,107,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '13px',
-              background: 'rgba(74,255,107,0.08)',
-              color: 'var(--green)',
-              fontFamily: 'var(--font-syne)',
-              fontWeight: 800,
-              flexShrink: 0,
-            }}>
+          <Link
+            href="/dashboard"
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}
+          >
+            <span
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                border: '1px solid rgba(74,255,107,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '13px',
+                background: 'rgba(74,255,107,0.08)',
+                color: 'var(--green)',
+                fontFamily: 'var(--font-syne)',
+                fontWeight: 800,
+                flexShrink: 0,
+              }}
+            >
               G
             </span>
-            <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '13px', color: 'var(--cream)', letterSpacing: '-0.02em' }}>
-              Golf Charity Club
+            <span
+              style={{
+                fontFamily: 'var(--font-syne)',
+                fontWeight: 700,
+                fontSize: '13px',
+                color: 'var(--cream)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              GOLF-Fego
             </span>
           </Link>
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, padding: '12px 10px' }} aria-label="Dashboard navigation">
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <ul
+            style={{
+              listStyle: 'none',
+              margin: 0,
+              padding: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+            }}
+          >
             {DASHBOARD_NAV_LINKS.map(({ label, href }) => {
               const isActive = href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
               return (
@@ -100,19 +122,25 @@ export function Sidebar({ profile }: SidebarProps) {
                     }}
                     aria-current={isActive ? 'page' : undefined}
                   >
-                    <span style={{ fontSize: '14px', flexShrink: 0, opacity: isActive ? 1 : 0.6 }} aria-hidden="true">
-                      {NAV_ICONS[href] ?? '•'}
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: '16px', flexShrink: 0, opacity: isActive ? 1 : 0.65 }}
+                      aria-hidden="true"
+                    >
+                      {NAV_ICONS[href] ?? 'radio_button_unchecked'}
                     </span>
                     {label}
                     {isActive && (
-                      <span style={{
-                        marginLeft: 'auto',
-                        width: '5px',
-                        height: '5px',
-                        borderRadius: '50%',
-                        background: 'var(--green)',
-                        flexShrink: 0,
-                      }} />
+                      <span
+                        style={{
+                          marginLeft: 'auto',
+                          width: '5px',
+                          height: '5px',
+                          borderRadius: '50%',
+                          background: 'var(--green)',
+                          flexShrink: 0,
+                        }}
+                      />
                     )}
                   </Link>
                 </li>
@@ -121,34 +149,49 @@ export function Sidebar({ profile }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* User footer */}
         <div style={{ padding: '12px 10px 16px', borderTop: '1px solid var(--border)' }}>
           {profile && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: 'rgba(74,255,107,0.12)',
-                border: '1px solid rgba(74,255,107,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--green)',
-                fontFamily: 'var(--font-syne)',
-                fontWeight: 700,
-                fontSize: '11px',
-                flexShrink: 0,
-              }}>
+            <Link
+              href="/dashboard/profile"
+              className="group flex cursor-pointer items-center gap-[10px] rounded-[8px] p-[10px_12px] no-underline transition-colors duration-200 hover:bg-[rgba(255,255,255,0.06)]"
+              style={{ background: 'rgba(255,255,255,0.03)' }}
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(74,255,107,0.12)',
+                  border: '1px solid rgba(74,255,107,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--green)',
+                  fontFamily: 'var(--font-syne)',
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  flexShrink: 0,
+                }}
+              >
                 {getInitials(profile.full_name)}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <p style={{ fontFamily: 'var(--font-syne)', fontSize: '12px', fontWeight: 600, color: 'var(--cream)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-syne)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: 'var(--cream)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
                   {profile.full_name}
                 </p>
-                <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '1px' }}>Member</p>
+                <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '1px' }}>Member Profile</p>
               </div>
-            </div>
+            </Link>
           )}
 
           <button
@@ -168,16 +211,21 @@ export function Sidebar({ profile }: SidebarProps) {
               letterSpacing: '-0.01em',
               transition: 'all 0.12s',
               textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            Sign out
+            <span>Sign out</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+              logout
+            </span>
           </button>
         </div>
       </aside>
 
-      {/* ── Mobile Bottom Nav ────────────────────────────────────────────── */}
       <nav
-        className="lg:hidden"
+        className="flex lg:hidden"
         style={{
           position: 'fixed',
           bottom: 0,
@@ -186,7 +234,6 @@ export function Sidebar({ profile }: SidebarProps) {
           zIndex: 30,
           background: 'var(--bg-deep)',
           borderTop: '1px solid var(--border)',
-          display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
           padding: '8px 4px',
@@ -194,7 +241,7 @@ export function Sidebar({ profile }: SidebarProps) {
         }}
         aria-label="Mobile navigation"
       >
-        {DASHBOARD_NAV_LINKS.slice(0, 5).map(({ label, href }) => {
+        {DASHBOARD_NAV_LINKS.slice(0, 4).map(({ label, href }) => {
           const isActive = href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
           return (
             <Link
@@ -215,11 +262,39 @@ export function Sidebar({ profile }: SidebarProps) {
                 minWidth: 0,
               }}
             >
-              <span style={{ fontSize: '16px' }} aria-hidden="true">{NAV_ICONS[href] ?? '•'}</span>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.split(' ')[0]}</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
+                {NAV_ICONS[href] ?? 'radio_button_unchecked'}
+              </span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {label.split(' ')[0]}
+              </span>
             </Link>
           );
         })}
+
+        <Link
+          href="/dashboard/profile"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '2px',
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            textDecoration: 'none',
+            background: pathname === '/dashboard/profile' ? 'var(--green)' : 'rgba(74,255,107,0.12)',
+            color: pathname === '/dashboard/profile' ? '#000' : 'var(--green)',
+            border: pathname === '/dashboard/profile' ? 'none' : '1px solid rgba(74,255,107,0.2)',
+            transform: 'translateY(-4px)',
+            boxShadow: pathname === '/dashboard/profile' ? 'var(--green-glow)' : 'none',
+          }}
+        >
+          <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: '13px' }}>
+            {profile ? getInitials(profile.full_name) : 'P'}
+          </span>
+        </Link>
       </nav>
     </>
   );
