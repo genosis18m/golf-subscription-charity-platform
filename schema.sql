@@ -280,7 +280,7 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Charities: readable by all, writable by admin only
 CREATE POLICY "Charities are public readable" ON charities FOR SELECT USING (true);
-CREATE POLICY "Charities writable by admin" ON charities FOR INSERT USING (auth.jwt() ->> 'role' = 'admin');
+CREATE POLICY "Charities writable by admin" ON charities FOR INSERT WITH CHECK (auth.jwt() ->> 'role' = 'admin');
 CREATE POLICY "Charities updatable by admin" ON charities FOR UPDATE USING (auth.jwt() ->> 'role' = 'admin');
 
 -- Profiles: users can read their own, update their own
@@ -297,7 +297,7 @@ CREATE POLICY "Users read own subscription" ON subscriptions FOR SELECT USING (a
 
 -- Draws: public readable, admin can create/update
 CREATE POLICY "Draws are public readable" ON draws FOR SELECT USING (true);
-CREATE POLICY "Only admin can insert draws" ON draws FOR INSERT USING (auth.jwt() ->> 'role' = 'admin');
+CREATE POLICY "Only admin can insert draws" ON draws FOR INSERT WITH CHECK (auth.jwt() ->> 'role' = 'admin');
 CREATE POLICY "Only admin can update draws" ON draws FOR UPDATE USING (auth.jwt() ->> 'role' = 'admin');
 
 -- Draw entries: users can read/insert their own
