@@ -1,0 +1,60 @@
+'use client';
+
+/**
+ * ChartWrapper component (Admin).
+ *
+ * A loading/error wrapper for chart components. Displays a skeleton
+ * while data loads and an error state if the fetch fails.
+ * Actual chart rendering is delegated to child components which use
+ * a charting library like recharts or chart.js.
+ *
+ * Usage:
+ * <ChartWrapper title="Subscriber Growth" isLoading={loading}>
+ *   <MyRechartsLineChart data={data} />
+ * </ChartWrapper>
+ */
+
+import { Skeleton } from '@/components/ui/Skeleton';
+
+interface ChartWrapperProps {
+  title: string;
+  subtitle?: string;
+  isLoading?: boolean;
+  error?: string | null;
+  /** Chart height in pixels. Defaults to 280. */
+  height?: number;
+  children: React.ReactNode;
+}
+
+export function ChartWrapper({
+  title,
+  subtitle,
+  isLoading = false,
+  error = null,
+  height = 280,
+  children,
+}: ChartWrapperProps) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+      </div>
+
+      <div style={{ height }} className="relative">
+        {isLoading ? (
+          <div className="absolute inset-0 space-y-3">
+            <Skeleton className="h-full w-full rounded-lg" />
+          </div>
+        ) : error ? (
+          <div className="absolute inset-0 flex items-center justify-center text-slate-400 flex-col gap-2">
+            <span className="text-3xl">📊</span>
+            <p className="text-sm">{error}</p>
+          </div>
+        ) : (
+          children
+        )}
+      </div>
+    </div>
+  );
+}
