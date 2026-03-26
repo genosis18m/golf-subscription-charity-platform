@@ -34,7 +34,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
               border: '1px solid rgba(74,255,107,0.25)',
             }}>⛳</span>
             <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '13px', color: 'var(--cream)' }} className="hidden sm:block">
-              Golf Charity Club
+              GOLF-Fego
             </span>
           </Link>
 

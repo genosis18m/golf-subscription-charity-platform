@@ -1,5 +1,5 @@
 /**
- * Core TypeScript interfaces for the Golf Charity Subscription Platform.
+ * Core TypeScript interfaces for the GOLF-Fego.
  * These types mirror the Supabase database schema and are used throughout
  * the application for consistent type safety.
  */
@@ -73,6 +73,7 @@ export interface Draw {
   title: string;
   draw_month: string; // e.g. "2024-03" — month this draw covers
   logic_type: DrawLogicType;
+  algorithmic_preference?: 'lowest' | 'highest';
   status: DrawStatus;
   prize_pool_snapshot: PrizePool; // snapshot at time of draw
   simulated_at: string | null;
@@ -171,7 +172,7 @@ export type SubscriptionStatus =
   | 'unpaid'
   | 'incomplete';
 
-export type SubscriptionPlanId = 'monthly' | 'yearly';
+export type SubscriptionPlanId = 'free' | 'monthly' | 'yearly';
 
 export interface Subscription {
   id: string;
@@ -272,6 +273,7 @@ export interface DrawConfigFormValues {
   title: string;
   draw_month: string;
   logic_type: DrawLogicType;
+  algorithmic_preference?: 'lowest' | 'highest';
   prize_pool_amount: number;
 }
 

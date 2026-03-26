@@ -12,7 +12,7 @@ import { SUBSCRIPTION_PLANS } from '@/constants';
 import type { Charity } from '@/types';
 
 export const metadata: Metadata = {
-  title: 'Golf Charity Club — Play, Win & Give Back',
+  title: 'GOLF-Fego — Play, Win & Give Back',
 };
 
 export const revalidate = 600;

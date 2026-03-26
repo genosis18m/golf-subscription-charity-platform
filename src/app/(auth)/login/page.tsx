@@ -43,7 +43,14 @@ export default function LoginPage() {
       });
 
       if (demoRes.ok) {
-        router.push(redirectTo);
+        const data = await demoRes.json();
+        
+        // If they are an admin, redirect them to the admin panel natively, overriding standard member redirects
+        if (data.role === 'admin' && (!searchParams.get('redirectTo') || searchParams.get('redirectTo')?.startsWith('/dashboard'))) {
+          router.push('/admin');
+        } else {
+          router.push(redirectTo);
+        }
         router.refresh();
         return;
       }
@@ -55,7 +62,7 @@ export default function LoginPage() {
     try {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -66,7 +73,12 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(redirectTo);
+      const role = data.user?.app_metadata?.role;
+      if ((role === 'admin' || role === 'super_admin') && (!searchParams.get('redirectTo') || searchParams.get('redirectTo')?.startsWith('/dashboard'))) {
+        router.push('/admin');
+      } else {
+        router.push(redirectTo);
+      }
       router.refresh();
     } catch {
       setError('Invalid email or password. Use the demo buttons above to try the platform.');

@@ -8,7 +8,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'About Us',
   description:
-    'Learn about the Golf Charity Club mission — connecting golfers with charitable causes through a transparent, prize-based subscription model.',
+    'Learn about the GOLF-Fego mission — connecting golfers with charitable causes through a transparent, prize-based subscription model.',
 };
 
 const TEAM = [
@@ -75,7 +75,7 @@ export default function AboutPage() {
               </span>
             </h1>
             <p style={{ color: 'var(--cream-dim)', fontSize: '17px', lineHeight: 1.7, maxWidth: '520px' }}>
-              We founded Golf Charity Club because we believed golfers could do more
+              We founded GOLF-Fego because we believed golfers could do more
               than just play — they could make a real, measurable difference to
               charities every time they teed up.
             </p>
@@ -111,7 +111,7 @@ export default function AboutPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingTop: '8px' }}>
               <p style={{ color: 'var(--cream-dim)', fontSize: '15px', lineHeight: 1.75 }}>
-                Golf Charity Club is a subscription platform that fuses the excitement of
+                GOLF-Fego is a subscription platform that fuses the excitement of
                 monthly prize draws with direct charitable giving. For a fixed monthly fee,
                 members enter an automated draw based on their golf scores, with a portion
                 of every subscription going directly to their chosen registered charity.

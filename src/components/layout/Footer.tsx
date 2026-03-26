@@ -51,7 +51,7 @@ export function Footer() {
                 className="text-[var(--cream)] text-[15px]"
                 style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, letterSpacing: '-0.02em' }}
               >
-                Golf Charity Club
+                GOLF-Fego
               </span>
             </Link>
             <p
@@ -106,7 +106,7 @@ export function Footer() {
           style={{ borderTop: '1px solid var(--border)' }}
         >
           <p className="text-[12px]" style={{ color: 'var(--muted)' }}>
-            &copy; {new Date().getFullYear()} Golf Charity Club Ltd. All rights reserved.
+            &copy; {new Date().getFullYear()} GOLF-Fego Ltd. All rights reserved.
           </p>
           <p className="text-[12px] text-center" style={{ color: 'var(--muted)' }}>
             Registered Charity No. XXXXXXXX &middot; Gambling Commission Licensed

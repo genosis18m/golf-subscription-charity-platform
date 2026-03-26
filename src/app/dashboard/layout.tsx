@@ -39,9 +39,9 @@ export default async function DashboardLayout({
     };
 
     return (
-      <div className="flex min-h-screen" style={{ background: 'var(--bg-void)' }}>
+      <div className="flex min-h-[100dvh]" style={{ background: 'var(--bg-void)' }}>
         <Sidebar profile={demoProfile} />
-        <main className="flex-1 min-w-0 p-6 pb-24 lg:pb-6" id="main-content">
+        <main className="flex-1 min-w-0 p-6 pb-36 lg:pb-6 overflow-y-auto" id="main-content">
           {children}
         </main>
       </div>
@@ -70,9 +70,9 @@ export default async function DashboardLayout({
   if (!subscription) redirect('/onboarding/subscribe');
 
   return (
-    <div className="flex min-h-screen" style={{ background: 'var(--bg-void)' }}>
+    <div className="flex min-h-[100dvh]" style={{ background: 'var(--bg-void)' }}>
       <Sidebar profile={profile} />
-      <main className="flex-1 min-w-0 p-6 pb-24 lg:pb-6" id="main-content">
+      <main className="flex-1 min-w-0 p-6 pb-36 lg:pb-6 overflow-y-auto" id="main-content">
         {children}
       </main>
     </div>

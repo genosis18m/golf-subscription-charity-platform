@@ -8,7 +8,7 @@ import { CharityDirectory } from './CharityDirectory';
 
 export const metadata: Metadata = {
   title: 'Supported Charities',
-  description: 'Browse the registered charities supported by Golf Charity Club members.',
+  description: 'Browse the registered charities supported by GOLF-Fego members.',
 };
 
 export const revalidate = 600;
@@ -30,7 +30,7 @@ export default async function CharitiesPage() {
             <span className="serif-accent" style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.05em' }}>cause.</span>
           </h1>
           <p className="mx-auto max-w-lg leading-relaxed" style={{ color: 'var(--cream-dim)', fontSize: '16px' }}>
-            Every Golf Charity Club subscription funds one charity you believe in. At least 10% goes directly to them — every single month.
+            Every GOLF-Fego subscription funds one charity you believe in. At least 10% goes directly to them — every single month.
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--border-mid), transparent)' }} />

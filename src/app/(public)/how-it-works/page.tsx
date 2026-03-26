@@ -9,7 +9,7 @@ import { SUBSCRIPTION_PLANS, PRIZE_POOL_PERCENTAGES, SCORE_LIMITS } from '@/cons
 export const metadata: Metadata = {
   title: 'How It Works',
   description:
-    'Understand the Golf Charity Club subscription model, monthly draw process, and how your contributions reach your chosen charity.',
+    'Understand the GOLF-Fego subscription model, monthly draw process, and how your contributions reach your chosen charity.',
 };
 
 const FLOW_STEPS = [

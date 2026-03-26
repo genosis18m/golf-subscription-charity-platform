@@ -227,7 +227,7 @@ export default async function CharityProfilePage({ params }: PageProps) {
                   Support {charity.name}
                 </p>
                 <p className="mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--cream-dim)' }}>
-                  Subscribe to Golf Charity Club and choose this charity. A portion of every subscription goes directly to them — automatically, every month.
+                  Subscribe to GOLF-Fego and choose this charity. A portion of every subscription goes directly to them — automatically, every month.
                 </p>
               </div>
 

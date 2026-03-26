@@ -213,6 +213,32 @@ body {
   to   { background-position: 200% 0; }
 }
 
+@keyframes shimmer-gold-anim {
+  0%   { transform: translateX(-30%) translateY(-30%); }
+  100% { transform: translateX(30%) translateY(30%); }
+}
+
+.shimmer-gold {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-gold::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 45%,
+    rgba(245, 166, 35, 0.08) 50%,
+    transparent 55%
+  );
+  animation: shimmer-gold-anim 6s linear infinite;
+  pointer-events: none;
+}
+
 .animate-float-a { animation: float-a 7s ease-in-out infinite; }
 .animate-float-b { animation: float-b 9s ease-in-out infinite; }
 .animate-float-c { animation: float-c 5.5s ease-in-out infinite; }
@@ -221,6 +247,52 @@ body {
 .animate-reveal-in { animation: reveal-in 0.5s var(--ease-out-expo) forwards; }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
 .animate-ticker { animation: ticker 28s linear infinite; }
+
+/* ─── Golf Loader Animations ─────────────────────────────────────────────── */
+@keyframes putter-swing {
+  0% { transform: rotate(-50deg) translateX(-60px); opacity: 0; }
+  5% { transform: rotate(-50deg) translateX(-60px); opacity: 1; }
+  30% { transform: rotate(10deg) translateX(0px); opacity: 1; } /* Impact */
+  40% { transform: rotate(20deg) translateX(20px); opacity: 0; }
+  100% { transform: rotate(-50deg) translateX(-60px); opacity: 0; }
+}
+@keyframes ball-roll-refined {
+  0% { transform: translateX(0px); opacity: 0; }
+  29.9% { transform: translateX(0px); opacity: 0; }
+  30% { transform: translateX(0px); opacity: 1; } /* Start rolling at 1.5s */
+  95% { transform: translateX(700px); opacity: 0; }
+  100% { transform: translateX(700px); opacity: 0; }
+}
+@keyframes trail-refined {
+  0% { transform: scaleX(0); opacity: 0; transform-origin: left; }
+  30% { transform: scaleX(0); opacity: 1; transform-origin: left; }
+  50% { transform: scaleX(1); opacity: 1; transform-origin: left; }
+  70% { transform: scaleX(1); opacity: 1; transform-origin: right; }
+  95% { transform: scaleX(0); opacity: 0; transform-origin: right; }
+  100% { transform: scaleX(0); opacity: 0; }
+}
+
+.animate-putter { animation: putter-swing 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.animate-ball-roll { animation: ball-roll-refined 5s cubic-bezier(0.1, 0.5, 0.1, 1) infinite; }
+.animate-trail { animation: trail-refined 5s cubic-bezier(0.1, 0.5, 0.1, 1) infinite; }
+
+.shimmer-text {
+  background: linear-gradient(90deg, #abd600 0%, #ffffff 50%, #abd600 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+.electric-line {
+  background: linear-gradient(90deg, transparent, #abd600, #ffe088, #abd600, transparent);
+  box-shadow: 0 0 20px rgba(171, 214, 0, 0.6), 0 0 10px rgba(255, 224, 136, 0.4);
+}
+
+.metal-finish {
+  background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 45%, #4b5563 50%, #9ca3af 55%, #e5e7eb 100%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.4), 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
 
 /* ─── Card ────────────────────────────────────────────────────────────────── */
 .glass-card {

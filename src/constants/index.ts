@@ -1,5 +1,5 @@
 /**
- * Application-wide constants for the Golf Charity Subscription Platform.
+ * Application-wide constants for the GOLF-Fego.
  * Centralizing these values ensures consistency across the draw engine,
  * pricing, and UI without magic numbers scattered through the codebase.
  */
@@ -61,6 +61,23 @@ export interface SubscriptionPlanConfig {
 }
 
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanConfig> = {
+  free: {
+    id: 'free',
+    label: 'Free',
+    description: 'Basic access to the platform without entering the prize pools.',
+    price_pence: 0,
+    price_display: '£0 / forever',
+    billing_interval: 'month',
+    stripe_price_id: 'price_free',
+    savings_pct: null,
+    features: [
+      'Access member discussions',
+      'Follow your favourite charities',
+      'View upcoming draw details',
+      'Log golf scores strictly for fun',
+      'No prize pool eligibility',
+    ],
+  },
   monthly: {
     id: 'monthly',
     label: 'Monthly',

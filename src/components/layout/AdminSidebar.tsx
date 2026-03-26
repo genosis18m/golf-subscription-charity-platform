@@ -37,7 +37,7 @@ export function AdminSidebar({ profile }: AdminSidebarProps) {
             border: '1px solid rgba(245,166,35,0.3)',
           }}>⛳</span>
           <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '13px', color: 'var(--cream)' }}>
-            Golf Charity Club
+            GOLF-Fego
           </span>
         </Link>
         <span style={{

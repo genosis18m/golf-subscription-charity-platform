@@ -11,7 +11,7 @@ import type { Draw, DrawResult } from '@/types';
 
 export const metadata: Metadata = {
   title: 'Draw Results',
-  description: 'View published Golf Charity Club monthly draw results and winning numbers.',
+  description: 'View published GOLF-Fego monthly draw results and winning numbers.',
 };
 
 export const revalidate = 300;

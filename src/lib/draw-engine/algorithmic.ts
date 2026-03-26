@@ -55,7 +55,8 @@ const ADVANTAGE_ZONE = { min: 15, max: 35 };
  */
 export function computeParticipantWeights(
   userIds: string[],
-  scoreAverages: RollingScoreAverage[]
+  scoreAverages: RollingScoreAverage[],
+  preference: 'lowest' | 'highest' = 'lowest'
 ): WeightedUser[] {
   const scoreMap = new Map(scoreAverages.map((s) => [s.user_id, s.average_gross]));
 
@@ -76,9 +77,10 @@ export function computeParticipantWeights(
       // No score history → median weight
       weight = 0.5;
     } else {
-      // Invert: lower score (better golf) = higher weight
       // Normalise to 0.3–0.9 range to avoid extreme advantages
-      const normalised = 1 - (avgScore - minScore) / scoreRange;
+      const normalised = preference === 'lowest' 
+        ? 1 - (avgScore - minScore) / scoreRange // Invert: lower score (better golf) = higher weight
+        : (avgScore - minScore) / scoreRange;    // Format: higher score = higher weight
       weight = 0.3 + normalised * 0.6;
     }
 
@@ -133,14 +135,15 @@ function generateWeightedEntry(weight: number): number[] {
  */
 export function runAlgorithmicDraw(
   eligibleUserIds: string[],
-  scoreAverages: RollingScoreAverage[]
+  scoreAverages: RollingScoreAverage[],
+  preference: 'lowest' | 'highest' = 'lowest'
 ): {
   winningNumbers: number[];
   entries: AlgorithmicEntry[];
   winners: { fiveMatch: string[]; fourMatch: string[]; threeMatch: string[] };
 } {
   const winningNumbers = drawWinningNumbers();
-  const weights = computeParticipantWeights(eligibleUserIds, scoreAverages);
+  const weights = computeParticipantWeights(eligibleUserIds, scoreAverages, preference);
 
   const entries: AlgorithmicEntry[] = weights.map(({ userId, weight }) => ({
     userId,

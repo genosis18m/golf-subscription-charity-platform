@@ -55,7 +55,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
               className="text-[var(--cream)] text-[15px] tracking-[-0.02em] group-hover:text-[var(--green)] transition-colors"
               style={{ fontFamily: 'var(--font-syne)', fontWeight: 700 }}
             >
-              Golf Charity Club
+              GOLF-Fego
             </span>
           </Link>
 
