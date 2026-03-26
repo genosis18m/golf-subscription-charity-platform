@@ -8,6 +8,7 @@
 
 import type { Charity } from '@/types';
 import { SEED_CHARITIES, getCharityBySlug as getSeedBySlug } from './seed-charities';
+import { withTimeout } from '@/lib/with-timeout';
 
 const hasSupabase = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -15,6 +16,7 @@ const hasSupabase = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-anon-key-here'
 );
+const SUPABASE_QUERY_TIMEOUT_MS = 2500;
 
 /** Returns all active charities, featured first. */
 export async function fetchCharities(): Promise<Charity[]> {
@@ -22,12 +24,16 @@ export async function fetchCharities(): Promise<Charity[]> {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
-      const { data, error } = await supabase
-        .from('charities')
-        .select('*, events:charity_events(*)')
-        .eq('is_active', true)
-        .order('is_featured', { ascending: false })
-        .order('supporter_count', { ascending: false });
+      const { data, error } = await withTimeout(
+        supabase
+          .from('charities')
+          .select('*, events:charity_events(*)')
+          .eq('is_active', true)
+          .order('is_featured', { ascending: false })
+          .order('supporter_count', { ascending: false }),
+        SUPABASE_QUERY_TIMEOUT_MS,
+        'Charities query timed out'
+      );
       if (!error && data?.length) return data as Charity[];
     } catch {
       // fall through to seed data
@@ -42,12 +48,16 @@ export async function fetchFeaturedCharities(limit = 3): Promise<Charity[]> {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
-      const { data, error } = await supabase
-        .from('charities')
-        .select('id, name, slug, tagline, description, logo_url, banner_url, total_raised, supporter_count, is_featured')
-        .eq('is_active', true)
-        .eq('is_featured', true)
-        .limit(limit);
+      const { data, error } = await withTimeout(
+        supabase
+          .from('charities')
+          .select('id, name, slug, tagline, description, logo_url, banner_url, total_raised, supporter_count, is_featured')
+          .eq('is_active', true)
+          .eq('is_featured', true)
+          .limit(limit),
+        SUPABASE_QUERY_TIMEOUT_MS,
+        'Featured charities query timed out'
+      );
       if (!error && data?.length) return data as Charity[];
     } catch {
       // fall through
@@ -62,12 +72,16 @@ export async function fetchCharityBySlug(slug: string): Promise<Charity | null> 
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
-      const { data, error } = await supabase
-        .from('charities')
-        .select('*, events:charity_events(*)')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single();
+      const { data, error } = await withTimeout(
+        supabase
+          .from('charities')
+          .select('*, events:charity_events(*)')
+          .eq('slug', slug)
+          .eq('is_active', true)
+          .single(),
+        SUPABASE_QUERY_TIMEOUT_MS,
+        'Charity lookup timed out'
+      );
       if (!error && data) return data as Charity;
     } catch {
       // fall through
@@ -82,11 +96,15 @@ export async function fetchCharityById(id: string): Promise<Charity | null> {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
-      const { data, error } = await supabase
-        .from('charities')
-        .select('*, events:charity_events(*)')
-        .eq('id', id)
-        .single();
+      const { data, error } = await withTimeout(
+        supabase
+          .from('charities')
+          .select('*, events:charity_events(*)')
+          .eq('id', id)
+          .single(),
+        SUPABASE_QUERY_TIMEOUT_MS,
+        'Charity lookup timed out'
+      );
       if (!error && data) return data as Charity;
     } catch {
       // fall through

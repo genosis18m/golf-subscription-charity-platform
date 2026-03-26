@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { DEMO_COOKIE, getDemoSession } from '@/lib/demo-auth';
+import { hasSupabaseAuthCookies } from '@/lib/supabase/auth-cookies';
 
 const PROTECTED  = ['/dashboard', '/onboarding'];
 const ADMIN_PATH = '/admin';
@@ -12,24 +13,35 @@ const AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const needsAuth =
+    PROTECTED.some((p) => pathname.startsWith(p)) ||
+    pathname.startsWith(ADMIN_PATH);
 
-  // ── 1. Check demo session first (no Supabase needed) ──────────────────────
   const demoCookie = request.cookies.get(DEMO_COOKIE)?.value;
   const demoSession = getDemoSession(demoCookie);
 
   if (demoSession) {
-    // Logged-in demo user trying to access auth pages → redirect to dashboard
     if (AUTH_PATHS.some((p) => pathname.startsWith(p))) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    // Admin guard for demo admin
     if (pathname.startsWith(ADMIN_PATH) && demoSession.role !== 'admin') {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return NextResponse.next();
   }
 
-  // ── 2. Try Supabase session ────────────────────────────────────────────────
+  const hasSupabaseSession = hasSupabaseAuthCookies(request.cookies.getAll());
+
+  if (!hasSupabaseSession) {
+    if (needsAuth) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return NextResponse.next();
+  }
+
   const { supabaseResponse, user } = await updateSession(request);
 
   if (user) {
@@ -44,11 +56,6 @@ export async function proxy(request: NextRequest) {
     }
     return supabaseResponse;
   }
-
-  // ── 3. No session — guard protected routes ────────────────────────────────
-  const needsAuth =
-    PROTECTED.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith(ADMIN_PATH);
 
   if (needsAuth) {
     const loginUrl = new URL('/login', request.url);

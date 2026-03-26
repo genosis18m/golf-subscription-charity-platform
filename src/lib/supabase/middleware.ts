@@ -5,6 +5,9 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { withTimeout } from '@/lib/with-timeout';
+
+const SUPABASE_REQUEST_TIMEOUT_MS = 2000;
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -35,7 +38,13 @@ export async function updateSession(request: NextRequest) {
       },
     });
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await withTimeout(
+      supabase.auth.getUser(),
+      SUPABASE_REQUEST_TIMEOUT_MS,
+      'Supabase middleware auth timed out'
+    );
     return { supabaseResponse, user };
   } catch {
     return { supabaseResponse, user: null };
