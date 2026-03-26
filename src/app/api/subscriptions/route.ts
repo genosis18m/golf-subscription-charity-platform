@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createCheckoutSession, createStripeCustomer } from '@/lib/stripe/client';
+import { sendSubscriptionEmail } from '@/lib/email';
 
 export async function GET() {
   const user = await getAuthUser();
@@ -50,12 +51,22 @@ export async function POST(request: NextRequest) {
       stripe_subscription_id: 'sub_free_' + user.id,
       stripe_customer_id: 'cus_free_' + user.id,
       stripe_price_id: 'price_free',
+      current_period_start: new Date().toISOString(),
       current_period_end: new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString(), // 100 years
       charity_id: charity_id || null,
       charity_contribution_pct: 0,
     }, { onConflict: 'user_id' });
 
     if (upsertError) return NextResponse.json({ error: upsertError.message }, { status: 500 });
+    if (user.email) {
+      sendSubscriptionEmail({
+        to: user.email,
+        fullName: typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null,
+        planLabel: 'Free',
+      }).catch((emailError) => {
+        console.error('Free membership email error:', emailError);
+      });
+    }
     return NextResponse.json({ data: { url: success_url } }); // Returns the success URL so frontend routes seamlessly
   }
 

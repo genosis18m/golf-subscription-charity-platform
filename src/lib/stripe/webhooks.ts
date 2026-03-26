@@ -11,6 +11,7 @@
 
 import type Stripe from 'stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendSubscriptionEmail } from '@/lib/email';
 import type { SubscriptionStatus, SubscriptionPlanId } from '@/types';
 
 // ─── Type Helpers ─────────────────────────────────────────────────────────────
@@ -68,6 +69,21 @@ export async function handleSubscriptionCreated(subscription: Stripe.Subscriptio
     },
     { onConflict: 'stripe_subscription_id' }
   );
+
+  const [{ data: authLookup }, { data: profile }] = await Promise.all([
+    supabase.auth.admin.getUserById(userId),
+    supabase.from('profiles').select('full_name').eq('user_id', userId).maybeSingle(),
+  ]);
+
+  if (authLookup.user?.email) {
+    sendSubscriptionEmail({
+      to: authLookup.user.email,
+      fullName: profile?.full_name ?? null,
+      planLabel: getPlanIdFromPriceId(priceId) === 'yearly' ? 'Annual' : 'Monthly',
+    }).catch((emailError) => {
+      console.error('Subscription email error:', emailError);
+    });
+  }
 }
 
 /**

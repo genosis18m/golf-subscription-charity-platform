@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendWelcomeEmail } from '@/lib/email';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -31,8 +32,20 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Successful auth — redirect to intended destination
-  // Validate that `next` is a relative path to prevent open redirect attacks
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user?.email) {
+    sendWelcomeEmail({
+      to: user.email,
+      fullName:
+        typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null,
+    }).catch((emailError) => {
+      console.error('Welcome email error:', emailError);
+    });
+  }
+
   const safeNext = next.startsWith('/') ? next : '/dashboard';
   return NextResponse.redirect(`${origin}${safeNext}`);
 }

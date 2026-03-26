@@ -337,3 +337,12 @@ CREATE TRIGGER update_draws_updated_at BEFORE UPDATE ON draws
 
 CREATE TRIGGER update_winners_updated_at BEFORE UPDATE ON winners
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE subscriptions DROP CONSTRAINT IF EXISTS subscriptions_plan_id_check;
+ALTER TABLE subscriptions
+  ADD CONSTRAINT subscriptions_plan_id_check
+  CHECK (plan_id IN ('free', 'monthly', 'yearly'));
+
+ALTER TABLE subscriptions ALTER COLUMN charity_id DROP NOT NULL;
+ALTER TABLE draws ADD COLUMN IF NOT EXISTS algorithmic_preference TEXT
+  CHECK (algorithmic_preference IN ('lowest', 'highest'));

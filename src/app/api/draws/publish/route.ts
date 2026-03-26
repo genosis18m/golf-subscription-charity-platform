@@ -10,6 +10,7 @@ import { cookies } from 'next/headers';
 import { getAuthUser } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getDemoSession, DEMO_COOKIE } from '@/lib/demo-auth';
+import { sendWinnerNotificationEmail } from '@/lib/email';
 import type { Draw } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -97,6 +98,40 @@ export async function POST(request: NextRequest) {
 
   if (winnerRows.length > 0) {
     await supabase.from('winners').insert(winnerRows);
+
+    const winnerProfiles = await Promise.all(
+      winnerRows.map(async (winner) => {
+        const [{ data: authLookup }, { data: profile }] = await Promise.all([
+          supabase.auth.admin.getUserById(winner.user_id),
+          supabase.from('profiles').select('full_name').eq('user_id', winner.user_id).maybeSingle(),
+        ]);
+
+        if (!authLookup.user?.email) {
+          return null;
+        }
+
+        return {
+          email: authLookup.user.email,
+          fullName: profile?.full_name ?? null,
+          matchTier: winner.match_tier as 'five_match' | 'four_match' | 'three_match',
+          prizeAmount: winner.prize_amount,
+        };
+      })
+    );
+
+    await Promise.allSettled(
+      winnerProfiles
+        .filter((winner): winner is NonNullable<typeof winner> => winner !== null)
+        .map((winner) =>
+          sendWinnerNotificationEmail({
+            to: winner.email,
+            fullName: winner.fullName,
+            drawTitle: draw.title,
+            matchTier: winner.matchTier,
+            prizeAmount: winner.prizeAmount,
+          })
+        )
+    );
   }
 
   // Update draw to published
@@ -109,9 +144,6 @@ export async function POST(request: NextRequest) {
     .eq('id', draw_id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // TODO: Trigger winner notification emails via Resend/SendGrid
-
   return NextResponse.json({
     data: {
       published: true,
