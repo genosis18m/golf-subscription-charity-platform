@@ -6,7 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, getAuthUser } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { ensureStorageBucket } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
   const user = await getAuthUser();
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File too large. Maximum 5MB.' }, { status: 422 });
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Verify this winner belongs to the authenticated user
   const { data: winner } = await supabase
@@ -49,7 +51,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Upload to Supabase Storage
+  await ensureStorageBucket('winner-proofs', {
+    public: true,
+    allowedMimeTypes: allowedTypes,
+    fileSizeLimit: '5MB',
+  });
+
   const ext = file.name.split('.').pop() ?? 'jpg';
   const path = `${user.id}/${winnerId}.${ext}`;
 
@@ -61,12 +68,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: uploadError.message }, { status: 500 });
   }
 
-  // Get public URL
   const { data: { publicUrl } } = supabase.storage
     .from('winner-proofs')
     .getPublicUrl(path);
 
-  // Update winner record with proof URL
   await supabase
     .from('winners')
     .update({ proof_url: publicUrl, updated_at: new Date().toISOString() })
