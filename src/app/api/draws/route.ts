@@ -6,7 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getDemoSession, DEMO_COOKIE } from '@/lib/demo-auth';
 import { estimatePrizePool } from '@/lib/draw-engine/prize-calculator';
 import { SUBSCRIPTION_PLANS, SUBSCRIPTION_TO_PRIZE_POOL_PCT, PRIZE_POOL_PERCENTAGES } from '@/constants';
 import type { DrawConfigFormValues } from '@/types';
@@ -15,7 +18,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   let query = supabase
     .from('draws')
     .select('*, draw_results(*)')
@@ -34,17 +37,26 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getAuthUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  let userObj: { id: string; role: string } | null = null;
+  const cookieStore = await cookies();
+  const demoSession = getDemoSession(cookieStore.get(DEMO_COOKIE)?.value);
 
-  // Admin-only
-  const role = user.app_metadata?.role as string | undefined;
-  if (role !== 'admin' && role !== 'super_admin') {
+  if (demoSession && demoSession.role === 'admin') {
+    userObj = { id: demoSession.userId, role: 'admin' };
+  } else {
+    const user = await getAuthUser();
+    if (user) {
+      userObj = { id: user.id, role: user.app_metadata?.role as string };
+    }
+  }
+
+  if (!userObj) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (userObj.role !== 'admin' && userObj.role !== 'super_admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const body: DrawConfigFormValues = await request.json();
-  const { title, draw_month, logic_type, prize_pool_amount } = body;
+  const { title, draw_month, logic_type, prize_pool_amount, algorithmic_preference } = body;
 
   if (!title || !draw_month) {
     return NextResponse.json({ error: 'title and draw_month are required' }, { status: 422 });
@@ -104,9 +116,10 @@ export async function POST(request: NextRequest) {
       title,
       draw_month,
       logic_type,
+      algorithmic_preference,
       status: 'draft',
       prize_pool_snapshot: prizePoolSnapshot,
-      created_by: user.id,
+      created_by: userObj.id,
     })
     .select()
     .single();

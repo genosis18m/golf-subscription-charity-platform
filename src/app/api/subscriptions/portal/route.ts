@@ -5,11 +5,11 @@
  * their subscription (cancel, upgrade, update payment method).
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { createBillingPortalSession } from '@/lib/stripe/client';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const user = await getAuthUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -27,7 +27,15 @@ export async function POST() {
     );
   }
 
-  const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/dashboard/subscription`;
+  // Free Tier users do not have a Stripe Billing Portal as they have no payment records
+  if (subscription.stripe_customer_id.startsWith('cus_free_')) {
+    return NextResponse.json(
+      { error: 'You are currently on the Free plan. There is no billing information to manage.' },
+      { status: 400 }
+    );
+  }
+
+  const returnUrl = new URL('/dashboard/subscription', request.url).toString();
 
   const session = await createBillingPortalSession({
     customerId: subscription.stripe_customer_id,

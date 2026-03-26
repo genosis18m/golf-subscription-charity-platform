@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "diagnose:integrations": "node scripts/diagnose-integrations.mjs"
   },
   "dependencies": {
     "@stripe/stripe-js": "^8.11.0",

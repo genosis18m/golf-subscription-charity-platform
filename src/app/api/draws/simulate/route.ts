@@ -6,26 +6,39 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, getAuthUser } from '@/lib/supabase/server';
-import { runRandomDraw, categoriseWinners } from '@/lib/draw-engine/random';
+import { cookies } from 'next/headers';
+import { getAuthUser } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getDemoSession, DEMO_COOKIE } from '@/lib/demo-auth';
+import { categoriseWinners, runRandomDraw } from '@/lib/draw-engine/random';
 import { runAlgorithmicDraw } from '@/lib/draw-engine/algorithmic';
 import { calculatePrizePool } from '@/lib/draw-engine/prize-calculator';
 import { SCORE_LIMITS } from '@/constants';
 import type { Draw, DrawEntry } from '@/types';
 
 export async function POST(request: NextRequest) {
-  const user = await getAuthUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  let userObj: { id: string; role: string } | null = null;
+  const cookieStore = await cookies();
+  const demoSession = getDemoSession(cookieStore.get(DEMO_COOKIE)?.value);
 
-  const role = user.app_metadata?.role as string | undefined;
-  if (role !== 'admin' && role !== 'super_admin') {
+  if (demoSession && demoSession.role === 'admin') {
+    userObj = { id: demoSession.userId, role: 'admin' };
+  } else {
+    const user = await getAuthUser();
+    if (user) {
+      userObj = { id: user.id, role: user.app_metadata?.role as string };
+    }
+  }
+
+  if (!userObj) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (userObj.role !== 'admin' && userObj.role !== 'super_admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { draw_id } = await request.json();
   if (!draw_id) return NextResponse.json({ error: 'draw_id required' }, { status: 422 });
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Fetch the draw
   const { data: drawData, error: drawError } = await supabase
@@ -89,7 +102,7 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    const result = runAlgorithmicDraw(eligibleUserIds, scoreAverages);
+    const result = runAlgorithmicDraw(eligibleUserIds, scoreAverages, draw.algorithmic_preference);
     winningNumbers = result.winningNumbers;
     entries = result.entries;
   } else {
@@ -120,10 +133,7 @@ export async function POST(request: NextRequest) {
     created_at: new Date().toISOString(),
   }));
 
-  const { fiveMatch, fourMatch, threeMatch } = require('@/lib/draw-engine/random').categoriseWinners(
-    entryObjects,
-    winningNumbers
-  );
+  const { fiveMatch, fourMatch, threeMatch } = categoriseWinners(entryObjects, winningNumbers);
 
   // Calculate prize pool
   const prizeCalc = calculatePrizePool({

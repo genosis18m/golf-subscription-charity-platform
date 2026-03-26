@@ -7,7 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
-import { createCheckoutSession, createStripeCustomer, getStripeCustomer } from '@/lib/stripe/client';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createCheckoutSession, createStripeCustomer } from '@/lib/stripe/client';
 
 export async function GET() {
   const user = await getAuthUser();
@@ -39,6 +40,24 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
+  const admin = createAdminClient();
+
+  if (price_id === 'price_free') {
+    const { error: upsertError } = await admin.from('subscriptions').upsert({
+      user_id: user.id,
+      plan_id: 'free',
+      status: 'active',
+      stripe_subscription_id: 'sub_free_' + user.id,
+      stripe_customer_id: 'cus_free_' + user.id,
+      stripe_price_id: 'price_free',
+      current_period_end: new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString(), // 100 years
+      charity_id: charity_id || null,
+      charity_contribution_pct: 0,
+    }, { onConflict: 'user_id' });
+
+    if (upsertError) return NextResponse.json({ error: upsertError.message }, { status: 500 });
+    return NextResponse.json({ data: { url: success_url } }); // Returns the success URL so frontend routes seamlessly
+  }
 
   // Check if a Stripe customer already exists for this user
   const { data: existingSub } = await supabase
@@ -50,8 +69,9 @@ export async function POST(request: NextRequest) {
   let customerId: string | undefined = existingSub?.stripe_customer_id;
 
   if (!customerId) {
-    // Fetch user email from auth
-    const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user.id);
+    const {
+      data: { user: authUser },
+    } = await admin.auth.admin.getUserById(user.id);
     const profile = await supabase.from('profiles').select('full_name').eq('user_id', user.id).single();
 
     const customer = await createStripeCustomer({

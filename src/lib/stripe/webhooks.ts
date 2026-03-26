@@ -10,7 +10,7 @@
  */
 
 import type Stripe from 'stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { SubscriptionStatus, SubscriptionPlanId } from '@/types';
 
 // ─── Type Helpers ─────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ function getPlanIdFromPriceId(priceId: string): SubscriptionPlanId {
  * Upserts the subscription record in Supabase.
  */
 export async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const customerId = subscription.customer as string;
   const priceId = subscription.items.data[0].price.id;
   const userId = subscription.metadata?.platform_user_id;
@@ -75,7 +75,7 @@ export async function handleSubscriptionCreated(subscription: Stripe.Subscriptio
  * Updates the existing subscription record.
  */
 export async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const priceId = subscription.items.data[0].price.id;
 
   await supabase
@@ -103,7 +103,7 @@ export async function handleSubscriptionUpdated(subscription: Stripe.Subscriptio
  * Marks the subscription as canceled in Supabase.
  */
 export async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   await supabase
     .from('subscriptions')
