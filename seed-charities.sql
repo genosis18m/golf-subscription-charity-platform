@@ -12,7 +12,7 @@ INSERT INTO charities (slug, name, tagline, description, logo_url, website_url, 
 ('royal-british-legion', 'Royal British Legion', 'Remembering, Supporting, Campaigning', 'Supporting current and ex-service personnel and their families. Housing, financial help, and companionship.', 'https://via.placeholder.com/200?text=RBL', 'https://www.britishlegion.org.uk', 'CC219279', true, true),
 ('mind-uk', 'Mind UK', 'Mental health support and campaigns', 'Providing information and support for anyone experiencing a mental health problem. Campaigning for mental health rights.', 'https://via.placeholder.com/200?text=Mind', 'https://www.mind.org.uk', 'CC219830', true, false),
 ('action-against-hunger', 'Action Against Hunger', 'Fighting hunger worldwide', 'Providing food security, clean water, healthcare and education in over 50 countries. No one left behind.', 'https://via.placeholder.com/200?text=Action+Hunger', 'https://www.actionagainsthunger.org.uk', 'CC1050775', true, false),
-('gamesaid', 'GamesAid', 'Supporting childhood disadvantage', 'UK\'s video games industry charity. Supports children\'s charities across the UK, raising millions for vulnerable children.', 'https://via.placeholder.com/200?text=GamesAid', 'https://www.gamesaid.org', 'CC1084880', true, false);
+('gamesaid', 'GamesAid', 'Supporting childhood disadvantage', 'UK''s video games industry charity. Supports children''s charities across the UK, raising millions for vulnerable children.', 'https://via.placeholder.com/200?text=GamesAid', 'https://www.gamesaid.org', 'CC1084880', true, false);
 
 -- Add charity events for featured charities
 INSERT INTO charity_events (charity_id, title, description, event_date, location, is_published) 
