@@ -1,6 +1,6 @@
-# 🚀 Golf Charity Platform - Complete Setup Guide
+# GOLF-Fego Setup Guide
 
-## ✅ What's Already Done
+## What's Already Done
 
 Your application has:
 - ✅ Complete Next.js 16 frontend with all pages and components
@@ -14,7 +14,7 @@ Your application has:
 
 ---
 
-## 📋 Step-by-Step Setup (4 Steps)
+## Step-by-Step Setup (4 Steps)
 
 ### **STEP 1️⃣ : Add SERVICE ROLE KEY to .env.local** (5 min)
 
@@ -84,7 +84,7 @@ You should see:
 
 ---
 
-## 🔑 Next: Configure Payments & Email (Optional for Testing)
+## Next: Configure Payments & Email
 
 ### **For Testing (You can skip this initially)**
 
@@ -155,7 +155,7 @@ This enables:
 
 ---
 
-## 🚀 Deploy to Vercel (Free Hosting)
+## Deploy to Vercel
 
 ### **Deploy in 3 Steps:**
 
@@ -193,7 +193,7 @@ Your site is now live!
 
 ---
 
-## 📊 Features You Can Test Right Now
+## Features You Can Test Right Now
 
 ### **Without Stripe/Email:**
 - ✅ Public website (home, about, charities, FAQ)
@@ -210,10 +210,15 @@ Your site is now live!
 
 ---
 
-## 🐛 Common Issues & Solutions
+## Common Issues & Solutions
 
 ### **"NEXT_PUBLIC_SUPABASE_URL is not set"**
 → Check your `.env.local` file has the correct values (not .env)
+
+### **"Invalid API key" during signup**
+→ Run `npm run diagnose:integrations`
+
+If Supabase is live but the anon key is stale, copy the latest **Project URL** and **anon public key** from **Supabase Dashboard → Settings → API** into `.env.local`, then restart `npm run dev`.
 
 ### **"RLS policy denied this request"**
 → Make sure schema.sql was fully executed (check Supabase SQL Editor for any errors)
@@ -226,7 +231,7 @@ Your site is now live!
 
 ---
 
-## ✨ What's Next (After Deployment)
+## What's Next
 
 - [ ] Add more charities via admin panel
 - [ ] Create your first draw (admin dashboard)
@@ -238,7 +243,7 @@ Your site is now live!
 
 ---
 
-## 📞 Support Resources
+## Support Resources
 
 - **Supabase Docs**: https://supabase.com/docs
 - **Next.js Docs**: https://nextjs.org/docs
@@ -247,7 +252,7 @@ Your site is now live!
 
 ---
 
-## 🎯 Summary
+## Summary
 
 **You now have:**
 1. ✅ Database schema ready
