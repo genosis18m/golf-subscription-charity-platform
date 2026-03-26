@@ -3,11 +3,10 @@
  */
 
 import Link from 'next/link';
-import { NumberBall } from '@/components/draw/NumberBall';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen grid lg:grid-cols-2" style={{ background: 'var(--bg-void)' }}>
+    <div className="min-h-[100dvh] grid lg:grid-cols-2" style={{ background: 'var(--bg-void)' }}>
 
       {/* ── Left: Branding panel ──────────────────────────────────────────── */}
       <div
@@ -47,7 +46,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             G
           </span>
           <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '15px', color: 'var(--cream)', letterSpacing: '-0.02em' }}>
-            Golf Charity Club
+            GOLF-Fego
           </span>
         </Link>
 
@@ -73,16 +72,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </blockquote>
 
         <p style={{ fontSize: '12px', color: 'var(--muted)', position: 'relative', zIndex: 10 }}>
-          &copy; {new Date().getFullYear()} Golf Charity Club Ltd.
+          &copy; {new Date().getFullYear()} GOLF-Fego Ltd.
         </p>
       </div>
 
       {/* ── Right: Auth form ──────────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-center px-5 py-16"
+        className="flex items-center justify-center px-5 pt-10 pb-24 overflow-y-auto"
         style={{ background: 'var(--bg-deep)' }}
       >
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[29rem]">
           {/* Mobile logo */}
           <Link href="/" className="flex items-center gap-3 mb-10 lg:hidden">
             <span
@@ -92,7 +91,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               G
             </span>
             <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '14px', color: 'var(--cream)' }}>
-              Golf Charity Club
+              GOLF-Fego
             </span>
           </Link>
 
