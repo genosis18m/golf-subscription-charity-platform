@@ -4,13 +4,14 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { getServerDemoSession, DEMO_USERS } from '@/lib/demo-auth-server';
 import { formatCurrency } from '@/lib/utils';
 import type { Subscription, Charity } from '@/types';
 
 export const metadata: Metadata = { title: 'My Charity' };
+
+const APPROX_MONTH_MS = 1000 * 60 * 60 * 24 * 30;
 
 export default async function MyCharityPage() {
   // ── Demo session ────────────────────────────────────────────────────────
@@ -62,7 +63,11 @@ export default async function MyCharityPage() {
   }
 
   const charity = subscription.charity;
-  const months = Math.max(1, Math.ceil((Date.now() - new Date(subscription.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30)));
+  const createdAt = new Date(subscription.created_at).getTime();
+  const currentPeriodStart = subscription.current_period_start
+    ? new Date(subscription.current_period_start).getTime()
+    : createdAt;
+  const months = Math.max(1, Math.floor((currentPeriodStart - createdAt) / APPROX_MONTH_MS) + 1);
   const monthly = Math.floor(2500 * subscription.charity_contribution_pct);
 
   return (

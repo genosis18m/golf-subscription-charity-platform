@@ -29,23 +29,20 @@ function calculateTimeLeft(targetDate: string): TimeLeft {
 }
 
 export function DrawCountdown({ nextDrawDate, drawTitle }: DrawCountdownProps) {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calculateTimeLeft(nextDrawDate));
 
   useEffect(() => {
-    setTimeLeft(calculateTimeLeft(nextDrawDate));
     const interval = setInterval(() => setTimeLeft(calculateTimeLeft(nextDrawDate)), 1000);
     return () => clearInterval(interval);
   }, [nextDrawDate]);
 
-  const isLive = timeLeft !== null && Object.values(timeLeft).every((v) => v === 0);
-
-  const display = timeLeft ?? { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  const isLive = Object.values(timeLeft).every((v) => v === 0);
 
   const units = [
-    { label: 'Days',  value: display.days },
-    { label: 'Hrs',   value: display.hours },
-    { label: 'Mins',  value: display.minutes },
-    { label: 'Secs',  value: display.seconds },
+    { label: 'Days', value: timeLeft.days },
+    { label: 'Hrs', value: timeLeft.hours },
+    { label: 'Mins', value: timeLeft.minutes },
+    { label: 'Secs', value: timeLeft.seconds },
   ];
 
   return (

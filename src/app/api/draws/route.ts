@@ -17,6 +17,19 @@ import type { DrawConfigFormValues } from '@/types';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
+  let userRole: string | null = null;
+
+  const cookieStore = await cookies();
+  const demoSession = getDemoSession(cookieStore.get(DEMO_COOKIE)?.value);
+
+  if (demoSession?.role) {
+    userRole = demoSession.role;
+  } else {
+    const user = await getAuthUser();
+    userRole = (user?.app_metadata?.role as string | undefined) ?? null;
+  }
+
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
 
   const supabase = createAdminClient();
   let query = supabase
@@ -25,8 +38,12 @@ export async function GET(request: NextRequest) {
     .order('draw_month', { ascending: false });
 
   if (status) {
+    if (!isAdmin && status !== 'published') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     query = query.eq('status', status);
-  } else {
+  } else if (!isAdmin) {
     // Default: only published draws for public access
     query = query.eq('status', 'published');
   }

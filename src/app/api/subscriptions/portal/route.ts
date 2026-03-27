@@ -28,9 +28,12 @@ export async function POST(request: NextRequest) {
   }
 
   // Free Tier users do not have a Stripe Billing Portal as they have no payment records
-  if (subscription.stripe_customer_id.startsWith('cus_free_')) {
+  if (
+    subscription.stripe_customer_id.startsWith('cus_free_') ||
+    subscription.stripe_customer_id.startsWith('cus_trial_')
+  ) {
     return NextResponse.json(
-      { error: 'You are currently on the Free plan. There is no billing information to manage.' },
+      { error: 'This membership has not started billing yet. Choose a paid plan first to manage billing.' },
       { status: 400 }
     );
   }

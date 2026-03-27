@@ -10,34 +10,39 @@
 
 import Stripe from 'stripe';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-  throw new Error(
-    'Missing STRIPE_SECRET_KEY environment variable. ' +
-    'Add it to .env.local and never commit it to source control.'
-  );
-}
+let stripeClient: Stripe | null = null;
 
 /**
- * Singleton Stripe instance configured for the current API version.
- * Import this wherever you need server-side Stripe operations.
+ * Returns a lazily-created Stripe client.
  *
- * @example
- * ```ts
- * import { stripe } from '@/lib/stripe/client'
- *
- * const session = await stripe.checkout.sessions.create({ ... })
- * ```
+ * Delayed-start and complimentary-access flows do not require Stripe, so we
+ * avoid throwing at module import time when the secret key is absent.
  */
-export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2026-02-25.clover',
-  typescript: true,
-  appInfo: {
-    name: 'GOLF-Fego',
-    version: '1.0.0',
-  },
-});
+export function getStripeClient() {
+  if (stripeClient) {
+    return stripeClient;
+  }
+
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!stripeSecretKey) {
+    throw new Error(
+      'Missing STRIPE_SECRET_KEY environment variable. ' +
+      'Add it to .env.local and never commit it to source control.'
+    );
+  }
+
+  stripeClient = new Stripe(stripeSecretKey, {
+    apiVersion: '2026-02-25.clover',
+    typescript: true,
+    appInfo: {
+      name: 'GOLF-Fego',
+      version: '1.0.0',
+    },
+  });
+
+  return stripeClient;
+}
 
 /**
  * Creates a Stripe Checkout session for the given plan.
@@ -56,6 +61,7 @@ export async function createCheckoutSession({
   cancelUrl: string;
   metadata?: Record<string, string>;
 }) {
+  const stripe = getStripeClient();
   return stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
@@ -79,6 +85,7 @@ export async function createBillingPortalSession({
   customerId: string;
   returnUrl: string;
 }) {
+  const stripe = getStripeClient();
   return stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
@@ -89,6 +96,7 @@ export async function createBillingPortalSession({
  * Retrieves an existing Stripe customer by ID.
  */
 export async function getStripeCustomer(customerId: string) {
+  const stripe = getStripeClient();
   return stripe.customers.retrieve(customerId);
 }
 
@@ -104,6 +112,7 @@ export async function createStripeCustomer({
   name: string;
   userId: string;
 }) {
+  const stripe = getStripeClient();
   return stripe.customers.create({
     email,
     name,

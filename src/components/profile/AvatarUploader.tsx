@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -69,6 +70,7 @@ const stockAvatars = [
 ] as const;
 
 export function AvatarUploader({ initialAvatarUrl, isDemo }: AvatarUploaderProps) {
+  const router = useRouter();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [uploading, setUploading] = useState(false);
 
@@ -93,6 +95,7 @@ export function AvatarUploader({ initialAvatarUrl, isDemo }: AvatarUploaderProps
 
     setAvatarUrl(json.data.url);
     toast.success('Profile picture updated');
+    router.refresh();
   }
 
   async function updateProfileAvatar(url: string) {
@@ -136,6 +139,7 @@ export function AvatarUploader({ initialAvatarUrl, isDemo }: AvatarUploaderProps
 
       setAvatarUrl(json.data.url);
       toast.success('Profile picture updated');
+      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error uploading image');
     } finally {

@@ -67,6 +67,27 @@ export default function SignupPage() {
   const [isVerificationSent, setIsVerificationSent] = useState(false);
   const [existingAccountEmail, setExistingAccountEmail] = useState<string | null>(null);
 
+  function clearFieldErrors(...fieldNames: Array<keyof typeof errors>) {
+    setErrors((current) => {
+      if (Object.keys(current).length === 0) {
+        return current;
+      }
+
+      const nextErrors = { ...current };
+
+      for (const fieldName of fieldNames) {
+        delete nextErrors[fieldName];
+      }
+
+      delete nextErrors.form;
+      return nextErrors;
+    });
+
+    if (existingAccountEmail) {
+      setExistingAccountEmail(null);
+    }
+  }
+
   function validate(): boolean {
     const nextErrors: Record<string, string> = {};
 
@@ -328,7 +349,10 @@ export default function SignupPage() {
                   type="text"
                   autoComplete="name"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => {
+                    clearFieldErrors('fullName');
+                    setFullName(e.target.value);
+                  }}
                   required
                   placeholder="Alex Fairway"
                   className={cn(
@@ -352,7 +376,10 @@ export default function SignupPage() {
                   type="email"
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    clearFieldErrors('email');
+                    setEmail(e.target.value);
+                  }}
                   required
                   placeholder="you@example.com"
                   className={cn(
@@ -377,7 +404,10 @@ export default function SignupPage() {
                     type="password"
                     autoComplete="new-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      clearFieldErrors('password', 'confirmPassword');
+                      setPassword(e.target.value);
+                    }}
                     required
                     placeholder="Minimum 8 characters"
                     className={cn(
@@ -401,7 +431,10 @@ export default function SignupPage() {
                     type="password"
                     autoComplete="new-password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      clearFieldErrors('confirmPassword');
+                      setConfirmPassword(e.target.value);
+                    }}
                     required
                     placeholder="Repeat password"
                     className={cn(

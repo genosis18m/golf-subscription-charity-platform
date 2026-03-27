@@ -6,27 +6,85 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+
+function getLoginErrorMessage(errorCode: string | null) {
+  if (!errorCode) return null;
+
+  if (errorCode === 'missing_code') {
+    return 'That sign-in link is missing required data. Request a fresh link and try again.';
+  }
+
+  return decodeURIComponent(errorCode.replace(/\+/g, ' '));
+}
+
+function getDemoCredentials(type: 'member' | 'admin') {
+  if (type === 'member') {
+    return { email: 'demo@golfcharity.com', password: 'Demo1234!' };
+  }
+
+  return { email: 'admin@golfcharity.com', password: 'Admin1234!' };
+}
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
+  const prefersAdminDefault =
+    !searchParams.get('redirectTo') || searchParams.get('redirectTo')?.startsWith('/dashboard');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => getLoginErrorMessage(searchParams.get('error')));
   const [isLoading, setIsLoading] = useState(false);
 
-  function fill(type: 'member' | 'admin') {
-    if (type === 'member') {
-      setEmail('demo@golfcharity.com');
-      setPassword('Demo1234!');
-    } else {
-      setEmail('admin@golfcharity.com');
-      setPassword('Admin1234!');
+  function getDestination(role?: string) {
+    if ((role === 'admin' || role === 'super_admin') && prefersAdminDefault) {
+      return '/admin';
     }
+
+    return redirectTo;
+  }
+
+  function clearError() {
+    if (error) {
+      setError(null);
+    }
+  }
+
+  async function signInWithDemoCredentials(nextEmail: string, nextPassword: string) {
+    const demoRes = await fetch('/api/auth/demo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: nextEmail.trim(), password: nextPassword }),
+    });
+
+    if (!demoRes.ok) {
+      return false;
+    }
+
+    const data = await demoRes.json();
+    window.location.assign(getDestination(data.role));
+    return true;
+  }
+
+  async function handleDemoAccess(type: 'member' | 'admin') {
+    const credentials = getDemoCredentials(type);
+
+    setEmail(credentials.email);
+    setPassword(credentials.password);
     setError(null);
+    setIsLoading(true);
+
+    try {
+      if (await signInWithDemoCredentials(credentials.email, credentials.password)) {
+        return;
+      }
+    } catch {
+      // fall through to inline error
+    }
+
+    setError('Demo sign-in is temporarily unavailable. Try again in a moment.');
+    setIsLoading(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -36,22 +94,7 @@ export default function LoginPage() {
 
     // 1. Try demo auth first
     try {
-      const demoRes = await fetch('/api/auth/demo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      if (demoRes.ok) {
-        const data = await demoRes.json();
-        
-        // If they are an admin, redirect them to the admin panel natively, overriding standard member redirects
-        if (data.role === 'admin' && (!searchParams.get('redirectTo') || searchParams.get('redirectTo')?.startsWith('/dashboard'))) {
-          router.push('/admin');
-        } else {
-          router.push(redirectTo);
-        }
-        router.refresh();
+      if (await signInWithDemoCredentials(email, password)) {
         return;
       }
     } catch {
@@ -74,12 +117,7 @@ export default function LoginPage() {
       }
 
       const role = data.user?.app_metadata?.role;
-      if ((role === 'admin' || role === 'super_admin') && (!searchParams.get('redirectTo') || searchParams.get('redirectTo')?.startsWith('/dashboard'))) {
-        router.push('/admin');
-      } else {
-        router.push(redirectTo);
-      }
-      router.refresh();
+      window.location.assign(getDestination(role));
     } catch {
       setError('Invalid email or password. Use the demo buttons above to try the platform.');
       setIsLoading(false);
@@ -142,7 +180,8 @@ export default function LoginPage() {
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
             type="button"
-            onClick={() => fill('member')}
+            onClick={() => handleDemoAccess('member')}
+            disabled={isLoading}
             style={{
               fontSize: '12px',
               padding: '7px 14px',
@@ -155,13 +194,15 @@ export default function LoginPage() {
               fontWeight: 600,
               letterSpacing: '-0.01em',
               transition: 'background 0.15s',
+              opacity: isLoading ? 0.7 : 1,
             }}
           >
-            Member Account
+            Continue as Member
           </button>
           <button
             type="button"
-            onClick={() => fill('admin')}
+            onClick={() => handleDemoAccess('admin')}
+            disabled={isLoading}
             style={{
               fontSize: '12px',
               padding: '7px 14px',
@@ -174,9 +215,10 @@ export default function LoginPage() {
               fontWeight: 600,
               letterSpacing: '-0.01em',
               transition: 'background 0.15s',
+              opacity: isLoading ? 0.7 : 1,
             }}
           >
-            Admin Account
+            Continue as Admin
           </button>
         </div>
       </div>
@@ -209,7 +251,10 @@ export default function LoginPage() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              clearError();
+              setEmail(e.target.value);
+            }}
             required
             placeholder="you@example.com"
             style={inputStyle}
@@ -236,7 +281,10 @@ export default function LoginPage() {
             type="password"
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              clearError();
+              setPassword(e.target.value);
+            }}
             required
             placeholder="Your password"
             style={inputStyle}

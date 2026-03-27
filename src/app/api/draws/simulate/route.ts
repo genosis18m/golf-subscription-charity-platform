@@ -61,12 +61,35 @@ export async function POST(request: NextRequest) {
   }
 
   // Find eligible users: active subscription + at least 1 score in draw month
-  const { data: eligibleUsers } = await supabase
+  const { data: subscriptionRows } = await supabase
     .from('subscriptions')
-    .select('user_id')
+    .select('user_id, stripe_price_id, stripe_subscription_id')
     .in('status', ['active', 'trialing']);
 
-  const eligibleUserIds = (eligibleUsers ?? []).map((u: { user_id: string }) => u.user_id);
+  const complimentaryUserIds = (subscriptionRows ?? [])
+    .filter(
+      (subscription: { stripe_price_id: string; stripe_subscription_id: string }) =>
+        subscription.stripe_price_id === 'price_free' ||
+        subscription.stripe_price_id === 'price_delayed_start' ||
+        subscription.stripe_subscription_id.startsWith('sub_free_') ||
+        subscription.stripe_subscription_id.startsWith('sub_trial_')
+    )
+    .map((subscription: { user_id: string }) => subscription.user_id);
+
+  const { data: usedComplimentaryEntries } = complimentaryUserIds.length
+    ? await supabase
+        .from('draw_entries')
+        .select('user_id')
+        .in('user_id', complimentaryUserIds)
+    : { data: [] as Array<{ user_id: string }> };
+
+  const usedComplimentaryUserIds = new Set(
+    (usedComplimentaryEntries ?? []).map((entry: { user_id: string }) => entry.user_id)
+  );
+
+  const eligibleUserIds = (subscriptionRows ?? [])
+    .filter((subscription: { user_id: string }) => !usedComplimentaryUserIds.has(subscription.user_id))
+    .map((subscription: { user_id: string }) => subscription.user_id);
 
   if (eligibleUserIds.length === 0) {
     return NextResponse.json({ error: 'No eligible participants' }, { status: 422 });

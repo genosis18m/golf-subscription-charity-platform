@@ -11,18 +11,19 @@ interface NavbarProps {
 }
 
 export function Navbar({ isAuthenticated = false }: NavbarProps) {
-  const [open, setOpen] = useState(false);
+  const [mobileMenuState, setMobileMenuState] = useState({
+    pathname: '',
+    open: false,
+  });
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const open = mobileMenuState.pathname === pathname ? mobileMenuState.open : false;
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
-
-  // Close mobile menu on route change
-  useEffect(() => { setOpen(false); }, [pathname]);
 
   return (
     <header
@@ -108,7 +109,12 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
           {/* ── Mobile Hamburger ──────────────────────────────────────────── */}
           <button
             className="md:hidden flex flex-col gap-[5px] p-2 group"
-            onClick={() => setOpen((v) => !v)}
+            onClick={() =>
+              setMobileMenuState((state) => ({
+                pathname,
+                open: state.pathname === pathname ? !state.open : true,
+              }))
+            }
             aria-expanded={open}
             aria-label="Toggle navigation"
           >
@@ -145,6 +151,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
               <Link
                 key={href}
                 href={href}
+                onClick={() => setMobileMenuState({ pathname, open: false })}
                 className="block px-4 py-2.5 rounded-xl text-sm text-[var(--cream-dim)] hover:text-[var(--cream)] hover:bg-[var(--bg-card)] transition-colors"
                 style={{ fontFamily: 'var(--font-syne)', fontWeight: 500 }}
               >
@@ -154,12 +161,14 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
             <div className="pt-3 flex gap-2">
               <Link
                 href="/login"
+                onClick={() => setMobileMenuState({ pathname, open: false })}
                 className="flex-1 btn btn-outline btn-sm text-center"
               >
                 Sign in
               </Link>
               <Link
                 href="/signup"
+                onClick={() => setMobileMenuState({ pathname, open: false })}
                 className="flex-1 btn btn-primary btn-sm text-center"
               >
                 Get Started

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { cookies } from 'next/headers';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -19,7 +20,7 @@ import { DrawCountdown } from '@/components/dashboard/DrawCountdown';
 import { AvatarUploader } from '@/components/profile/AvatarUploader';
 import { LogoutButton } from '@/components/profile/LogoutButton';
 import { formatCurrency } from '@/lib/utils';
-import type { Profile, Subscription, Winner } from '@/types';
+import type { Draw, DrawEntry, Profile, Subscription, Winner } from '@/types';
 
 export const metadata: Metadata = { title: 'Member Profile' };
 
@@ -67,6 +68,9 @@ function getNextDrawDate() {
 export default async function ProfilePage() {
   const cookieStore = await cookies();
   const demoSession = getDemoSession(cookieStore.get(DEMO_COOKIE)?.value);
+  const nextDrawDate = getNextDrawDate();
+  const drawMonth = new Date(nextDrawDate).toLocaleDateString('en-GB', { month: 'long' });
+  const activeDrawMonth = nextDrawDate.slice(0, 7);
 
   const profileData: {
     fullName: string;
@@ -80,6 +84,8 @@ export default async function ProfilePage() {
     userId: string;
     golfClub: string | null;
     charityName: string;
+    subscriptionPriceId: string | null;
+    hasActiveDrawEntry: boolean;
   } = {
     fullName: demoSession ? demoSession.name : DEMO_USERS.user.full_name,
     createdAt: '2023-08-15T00:00:00Z',
@@ -92,6 +98,8 @@ export default async function ProfilePage() {
     userId: demoSession ? demoSession.userId : 'demo-user-id',
     golfClub: DEMO_USERS.user.golf_club,
     charityName: DEMO_USERS.user.charity_name,
+    subscriptionPriceId: null,
+    hasActiveDrawEntry: Boolean(demoSession),
   };
 
   if (!demoSession) {
@@ -101,7 +109,7 @@ export default async function ProfilePage() {
     } = await supabase.auth.getUser();
 
     if (user) {
-      const [profileResult, subscriptionResult, winnersResult] = await Promise.all([
+      const [profileResult, subscriptionResult, winnersResult, latestDrawEntryResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('user_id', user.id).single(),
         supabase
           .from('subscriptions')
@@ -110,11 +118,23 @@ export default async function ProfilePage() {
           .in('status', ['active', 'trialing'])
           .single(),
         supabase.from('winners').select('*').eq('user_id', user.id).eq('status', 'paid'),
+        supabase
+          .from('draw_entries')
+          .select('id, draw:draws(title, draw_month, status)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
 
       const profile = profileResult.data as Profile | null;
       const subscription = subscriptionResult.data as (Subscription & { charity?: { name: string } | null }) | null;
       const winners = (winnersResult.data ?? []) as Winner[];
+      const latestDrawEntry = latestDrawEntryResult.data as
+        | (Pick<DrawEntry, 'id'> & {
+            draw?: Pick<Draw, 'title' | 'draw_month' | 'status'> | null;
+          })
+        | null;
 
       if (profile) {
         profileData.fullName = profile.full_name;
@@ -128,14 +148,18 @@ export default async function ProfilePage() {
 
       if (subscription) {
         profileData.planId = subscription.plan_id;
-        profileData.totalDonated = Math.floor(
-          (subscription.plan_id === 'yearly' ? 25000 : 2500) * subscription.charity_contribution_pct
-        );
+        profileData.subscriptionPriceId = subscription.stripe_price_id;
+        profileData.totalDonated = subscription.stripe_price_id === 'price_delayed_start' || subscription.stripe_price_id === 'price_free'
+          ? 0
+          : Math.floor(
+              (subscription.plan_id === 'yearly' ? 25000 : 2500) * subscription.charity_contribution_pct
+            );
         profileData.charityName = subscription.charity?.name ?? 'Selected charity';
       }
 
       profileData.winsCount = winners.length;
       profileData.totalWinnings = winners.reduce((sum, winner) => sum + winner.prize_amount, 0);
+      profileData.hasActiveDrawEntry = latestDrawEntry?.draw?.draw_month === activeDrawMonth;
     }
   }
 
@@ -150,10 +174,24 @@ export default async function ProfilePage() {
     month: 'long',
     year: 'numeric',
   });
-  const memberTier = profileData.planId === 'yearly' ? 'Eagle Member' : 'Member';
-  const nextDrawDate = getNextDrawDate();
-  const drawMonth = new Date(nextDrawDate).toLocaleDateString('en-GB', { month: 'long' });
+  const memberTier =
+    profileData.subscriptionPriceId === 'price_delayed_start'
+      ? 'Delayed Start'
+      : profileData.planId === 'free'
+        ? 'Free Access'
+        : profileData.planId === 'yearly'
+          ? 'Eagle Member'
+          : 'Member';
   const handicapLabel = profileData.handicap > 0 ? String(profileData.handicap) : 'N/A';
+  const drawCardTitle = profileData.hasActiveDrawEntry
+    ? `Entered in ${drawMonth} Monthly Draw`
+    : `${drawMonth} Monthly Draw`;
+  const drawCardBody = profileData.hasActiveDrawEntry
+    ? `Your entry is confirmed. The main draw will take place on the ${DRAW_DEFAULT_DAY}th.`
+    : 'Submit a score to lock in your numbers for this month and see your ticket here.';
+  const drawActionHref = profileData.hasActiveDrawEntry ? '/dashboard/draws' : '/dashboard/scores';
+  const drawActionLabel = profileData.hasActiveDrawEntry ? 'View Ticket' : 'Add Scores';
+  const drawPrizeLabel = profileData.hasActiveDrawEntry ? 'Jackpot Pending' : 'Entry not locked in';
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-12">
@@ -405,11 +443,9 @@ export default async function ProfilePage() {
                 <span className="text-[10px] font-bold uppercase tracking-widest">Active Draw</span>
               </div>
               <h2 className="text-2xl font-black leading-tight md:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
-                Entered in {drawMonth} Monthly Draw
+                {drawCardTitle}
               </h2>
-              <p style={{ color: 'var(--cream-dim)' }}>
-                Your entry is confirmed. The main draw will take place on the {DRAW_DEFAULT_DAY}th.
-              </p>
+              <p style={{ color: 'var(--cream-dim)' }}>{drawCardBody}</p>
             </div>
 
             <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
@@ -417,11 +453,11 @@ export default async function ProfilePage() {
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: 'var(--muted)' }}>
                   Draw Prize
                 </p>
-                <p className="text-3xl serif-accent" style={{ color: 'var(--gold)' }}>
-                  Jackpot Pending
-                </p>
+                <p className="text-3xl serif-accent" style={{ color: 'var(--gold)' }}>{drawPrizeLabel}</p>
               </div>
-              <button className="btn btn-primary w-full shadow-xl md:w-auto">View Ticket</button>
+              <Link href={drawActionHref} className="btn btn-primary w-full text-center shadow-xl md:w-auto">
+                {drawActionLabel}
+              </Link>
             </div>
           </div>
         </div>

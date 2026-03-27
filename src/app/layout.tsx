@@ -39,7 +39,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased min-h-screen" style={{ fontFamily: 'var(--font-dm-sans), system-ui, sans-serif' }}>
+      <body
+        className="antialiased min-h-screen"
+        suppressHydrationWarning
+        style={{ fontFamily: 'var(--font-dm-sans), system-ui, sans-serif' }}
+      >
         {children}
         <Toaster
           position="top-right"

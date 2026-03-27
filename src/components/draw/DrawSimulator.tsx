@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { NumberBallRow } from './NumberBall';
 
@@ -31,6 +32,7 @@ export function DrawSimulator({
   drawTitle,
   onSimulationComplete,
 }: DrawSimulatorProps) {
+  const router = useRouter();
   const [isSimulating, setIsSimulating] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,7 @@ export function DrawSimulator({
       const json = await response.json();
       setResult(json.data);
       onSimulationComplete?.(json.data);
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {

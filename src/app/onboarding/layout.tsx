@@ -5,6 +5,7 @@
 import { headers } from 'next/headers';
 import { Stepper } from '@/components/layout/Stepper';
 import Link from 'next/link';
+import { DeferredAccessButton } from '@/components/onboarding/DeferredAccessButton';
 
 function getStepFromPathname(pathname: string): number {
   if (pathname.includes('/onboarding/charity')) return 2;
@@ -40,10 +41,25 @@ export default async function OnboardingLayout({ children }: { children: React.R
 
           <Stepper currentStep={currentStep} />
 
-          <div style={{ width: '100px', textAlign: 'right' }}>
-            <Link href="/dashboard" style={{ fontSize: '12px', color: 'var(--muted)', textDecoration: 'none', fontFamily: 'var(--font-syne)' }}>
-              Skip for now
-            </Link>
+          <div style={{ width: '140px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end' }}>
+            {currentStep === 3 ? (
+              <DeferredAccessButton
+                label="Skip for now"
+                pendingLabel="Starting…"
+                variant="ghost"
+                size="sm"
+                style={{
+                  padding: 0,
+                  fontSize: '12px',
+                  color: 'var(--muted)',
+                  background: 'none',
+                }}
+              />
+            ) : (
+              <Link href="/onboarding/subscribe" style={{ fontSize: '12px', color: 'var(--muted)', textDecoration: 'none', fontFamily: 'var(--font-syne)' }}>
+                Skip for now
+              </Link>
+            )}
           </div>
         </div>
       </header>

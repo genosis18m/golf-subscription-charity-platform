@@ -12,6 +12,7 @@
  */
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -58,12 +59,12 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
           >
             Try Again
           </button>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors"
           >
             Go Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

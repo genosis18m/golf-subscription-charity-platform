@@ -64,13 +64,22 @@ export default async function DashboardPage() {
   const scores = (scoresResult.data ?? []) as Score[];
   const winners = (winnersResult.data ?? []) as Winner[];
   const subscription = subscriptionResult.data as (Subscription & { charity: { name: string; logo_url: string | null } }) | null;
+  const isComplimentaryAccess =
+    subscription?.stripe_price_id === 'price_delayed_start' ||
+    subscription?.stripe_price_id === 'price_free';
+  const currentPlanPricePence = subscription
+    ? subscription.plan_id === 'yearly'
+      ? 25000
+      : subscription.plan_id === 'monthly'
+        ? 2500
+        : 0
+    : 0;
 
   const avgScore = scores.length > 0 ? scores.reduce((s, r) => s + r.gross_score, 0) / scores.length : null;
   const totalWinnings = winners.reduce((s, w) => s + w.prize_amount, 0);
-  const months = subscription
-    ? Math.ceil((Date.now() - new Date(subscription.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30))
+  const totalDonated = subscription && !isComplimentaryAccess
+    ? Math.floor(currentPlanPricePence * subscription.charity_contribution_pct)
     : 0;
-  const totalDonated = subscription ? Math.floor(2500 * subscription.charity_contribution_pct) * months : 0;
 
   return (
     <DashboardContent

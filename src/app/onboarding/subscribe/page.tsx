@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PricingCard } from '@/components/subscription/PricingCard';
 import { PlanToggle } from '@/components/subscription/PlanToggle';
+import { DeferredAccessButton } from '@/components/onboarding/DeferredAccessButton';
 import { SUBSCRIPTION_PLANS } from '@/constants';
 import type { SubscriptionPlanConfig } from '@/constants';
 import type { SubscriptionPlanId } from '@/types';
@@ -58,7 +59,7 @@ export default function OnboardingSubscribePage() {
           Choose your plan
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.5 }}>
-          Both plans include one draw entry per month. Cancel anytime.
+          Choose a paid plan now, or delay payment and unlock one complimentary draw entry while you get started.
         </p>
       </div>
 
@@ -86,6 +87,49 @@ export default function OnboardingSubscribePage() {
           />
         ))}
       </div>
+
+      <section
+        style={{
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(17,27,18,0.96) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '20px',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+        }}
+      >
+        <div>
+          <p
+            style={{
+              color: 'var(--gold)',
+              fontSize: '11px',
+              fontFamily: 'var(--font-syne)',
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginBottom: '6px',
+            }}
+          >
+            Delayed Start
+          </p>
+          <h2 style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--cream)', marginBottom: '8px' }}>
+            Start now, choose payment later
+          </h2>
+          <p style={{ color: 'var(--cream-dim)', fontSize: '14px', lineHeight: 1.6, maxWidth: '56ch' }}>
+            We&apos;ll let you into the dashboard immediately, keep your charity selection, and give you one complimentary draw entry. Upgrade to a paid membership before your following draw to continue participating.
+          </p>
+        </div>
+
+        <DeferredAccessButton
+          label="Start with delayed payment"
+          pendingLabel="Opening access…"
+          showInlineError
+          variant="outline"
+          size="md"
+          style={{ width: '100%', justifyContent: 'center' }}
+        />
+      </section>
 
       {/* Trust badges */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' }}>

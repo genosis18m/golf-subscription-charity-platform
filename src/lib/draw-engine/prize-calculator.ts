@@ -169,7 +169,7 @@ function computeRollovers(
 
   let toJackpot = 0;
   let toFourMatch = 0;
-  let toThreeMatch = 0;
+  const toThreeMatch = 0;
 
   // Jackpot (5-match): full rollover to next jackpot
   if (tierMap.get('five_match')?.rolled_over) {

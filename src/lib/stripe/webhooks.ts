@@ -67,7 +67,7 @@ export async function handleSubscriptionCreated(subscription: Stripe.Subscriptio
         ? new Date((subscription as unknown as { trial_end: number }).trial_end * 1000).toISOString()
         : null,
     },
-    { onConflict: 'stripe_subscription_id' }
+    { onConflict: 'user_id' }
   );
 
   const [{ data: authLookup }, { data: profile }] = await Promise.all([

@@ -3,6 +3,7 @@
  */
 
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { createClient, getAuthUser } from '@/lib/supabase/server';
 import { getServerDemoSession, DEMO_USERS } from '@/lib/demo-auth-server';
 import { formatDate, formatCurrency } from '@/lib/utils';
@@ -100,7 +101,31 @@ export default async function SubscriptionPage() {
   const supabase = await createClient();
   const { data } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single();
   const subscription = data as Subscription | null;
-  const plan = subscription ? SUBSCRIPTION_PLANS[subscription.plan_id] : null;
+  const isDelayedStart = subscription?.stripe_price_id === 'price_delayed_start';
+  const isSyntheticBilling =
+    subscription?.stripe_customer_id.startsWith('cus_free_') ||
+    subscription?.stripe_customer_id.startsWith('cus_trial_') ||
+    false;
+  const plannedContributionPct = subscription
+    ? Math.round(subscription.charity_contribution_pct * 100)
+    : 0;
+  const plan = subscription
+    ? {
+        ...SUBSCRIPTION_PLANS[subscription.plan_id],
+        label:
+          subscription.plan_id === 'free'
+            ? 'Free Access'
+            : isDelayedStart
+              ? 'Delayed Start'
+              : SUBSCRIPTION_PLANS[subscription.plan_id].label,
+        price_display:
+          subscription.plan_id === 'free'
+            ? '£0 / access'
+            : isDelayedStart
+              ? 'Access now, choose payment later'
+              : SUBSCRIPTION_PLANS[subscription.plan_id].price_display,
+      }
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '640px' }}>
@@ -148,11 +173,21 @@ export default async function SubscriptionPage() {
                   {formatDate(subscription.current_period_end, { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
-              {subscription.charity_contribution_pct && (
+              {subscription.charity_contribution_pct && !isSyntheticBilling && (
                 <div>
                   <p style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-syne)', fontWeight: 600, marginBottom: '4px' }}>Charity Contribution</p>
                   <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--cream-dim)' }}>
                     {Math.round(subscription.charity_contribution_pct * 100)}% ({formatCurrency(Math.floor(plan.price_pence * subscription.charity_contribution_pct))}/month)
+                  </p>
+                </div>
+              )}
+              {subscription.charity_contribution_pct && isSyntheticBilling && (
+                <div>
+                  <p style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-syne)', fontWeight: 600, marginBottom: '4px' }}>
+                    Planned Contribution
+                  </p>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--cream-dim)' }}>
+                    {plannedContributionPct}% once billing begins
                   </p>
                 </div>
               )}
@@ -167,14 +202,32 @@ export default async function SubscriptionPage() {
                 </p>
               </div>
             )}
+
+            {isDelayedStart && (
+              <div style={{ marginTop: '16px', background: 'rgba(74,255,107,0.08)', border: '1px solid rgba(74,255,107,0.2)', borderRadius: '8px', padding: '12px 14px' }}>
+                <p style={{ fontSize: '13px', color: 'var(--green)' }}>
+                  Delayed start is active. You can explore the dashboard now and receive one complimentary draw entry before upgrading to a paid plan.
+                </p>
+              </div>
+            )}
           </div>
 
           <div style={cardStyle}>
-            <h3 style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '14px', color: 'var(--cream)', marginBottom: '8px' }}>Manage Billing</h3>
+            <h3 style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '14px', color: 'var(--cream)', marginBottom: '8px' }}>
+              {isSyntheticBilling ? 'Complete Membership' : 'Manage Billing'}
+            </h3>
             <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px', lineHeight: 1.5 }}>
-              Update your payment method, download invoices, or cancel your subscription via the Stripe billing portal.
+              {isSyntheticBilling
+                ? 'Choose a paid plan when you are ready to keep entering future draws and unlock Stripe billing management.'
+                : 'Update your payment method, download invoices, or cancel your subscription via the Stripe billing portal.'}
             </p>
-            <ManageSubscriptionButton />
+            {isSyntheticBilling ? (
+              <Link href="/onboarding/subscribe" className="btn btn-primary btn-sm">
+                Choose Paid Plan
+              </Link>
+            ) : (
+              <ManageSubscriptionButton />
+            )}
           </div>
         </>
       ) : (

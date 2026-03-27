@@ -35,10 +35,22 @@ export function ChartWrapper({
   children,
 }: ChartWrapperProps) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+    <div
+      className="rounded-2xl p-5 shadow-sm"
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+      }}
+    >
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-        {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--cream)', fontFamily: 'var(--font-syne)' }}>
+          {title}
+        </h3>
+        {subtitle ? (
+          <p className="mt-0.5 text-xs" style={{ color: 'var(--muted)' }}>
+            {subtitle}
+          </p>
+        ) : null}
       </div>
 
       <div style={{ height }} className="relative">
@@ -47,7 +59,7 @@ export function ChartWrapper({
             <Skeleton className="h-full w-full rounded-lg" />
           </div>
         ) : error ? (
-          <div className="absolute inset-0 flex items-center justify-center text-slate-400 flex-col gap-2">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ color: 'var(--muted)' }}>
             <span className="text-3xl">📊</span>
             <p className="text-sm">{error}</p>
           </div>
