@@ -1,11 +1,10 @@
 /**
  * Root page at "/".
  * app/page.tsx takes precedence over (public)/page.tsx for the "/" route.
- * We render the full public layout (Navbar + homepage + Footer) here directly.
+ * We render the full public layout (Navbar + homepage) here directly.
  */
 
 import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
 import HomePage from './(public)/page';
 import { getAuthUser } from '@/lib/supabase/server';
 
@@ -20,7 +19,6 @@ export default async function RootPage() {
       <main className="flex-1" id="main-content">
         <HomePage />
       </main>
-      <Footer />
     </div>
   );
 }

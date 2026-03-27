@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { DASHBOARD_NAV_LINKS } from '@/constants';
 import { createClient } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
@@ -22,7 +22,6 @@ const NAV_ICONS: Record<string, string> = {
 
 export function Sidebar({ profile }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -32,8 +31,9 @@ export function Sidebar({ profile }: SidebarProps) {
       fetch('/api/auth/demo', { method: 'DELETE' }),
     ]);
 
-    router.push('/');
-    router.refresh();
+    // Hard redirect so the server re-reads the cleared demo cookie immediately.
+    // Soft router.push won't force the middleware to pick up the cleared cookie.
+    window.location.href = '/';
   }
 
   return (
