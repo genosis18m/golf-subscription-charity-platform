@@ -38,8 +38,8 @@ function getSignupErrorMessage(message: string) {
   if (/invalid api key/i.test(message)) {
     return (
       'Supabase rejected the public API key configured for this app. ' +
-      'Update NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local from Supabase Dashboard > Settings > API, ' +
-      'then restart the dev server.'
+      'Update NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel for deployments, or in .env.local for local dev, ' +
+      'then redeploy or restart the dev server.'
     );
   }
 

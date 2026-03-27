@@ -5,19 +5,11 @@
  */
 
 import { createBrowserClient } from '@supabase/ssr';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-const REAL_CREDS =
-  supabaseUrl &&
-  supabaseAnonKey &&
-  supabaseUrl !== 'https://your-project.supabase.co' &&
-  supabaseAnonKey !== 'your-anon-key-here';
+import { supabaseAnonKey, supabaseUrl, hasSupabaseCredentials } from './config';
 
 export function createClient() {
-  if (REAL_CREDS) {
-    return createBrowserClient(supabaseUrl!, supabaseAnonKey!);
+  if (hasSupabaseCredentials) {
+    return createBrowserClient(supabaseUrl, supabaseAnonKey);
   }
   // Stub — returns a client that fails gracefully without throwing
   return createBrowserClient(

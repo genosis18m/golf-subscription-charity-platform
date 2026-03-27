@@ -9,18 +9,13 @@
 import type { Charity } from '@/types';
 import { SEED_CHARITIES, getCharityBySlug as getSeedBySlug } from './seed-charities';
 import { withTimeout } from '@/lib/with-timeout';
+import { hasSupabaseCredentials } from '@/lib/supabase/config';
 
-const hasSupabase = Boolean(
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://your-project.supabase.co' &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-anon-key-here'
-);
 const SUPABASE_QUERY_TIMEOUT_MS = 2500;
 
 /** Returns all active charities, featured first. */
 export async function fetchCharities(): Promise<Charity[]> {
-  if (hasSupabase) {
+  if (hasSupabaseCredentials) {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
@@ -44,7 +39,7 @@ export async function fetchCharities(): Promise<Charity[]> {
 
 /** Returns up to `limit` featured charities for the homepage. */
 export async function fetchFeaturedCharities(limit = 3): Promise<Charity[]> {
-  if (hasSupabase) {
+  if (hasSupabaseCredentials) {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
@@ -68,7 +63,7 @@ export async function fetchFeaturedCharities(limit = 3): Promise<Charity[]> {
 
 /** Returns a single charity by slug. */
 export async function fetchCharityBySlug(slug: string): Promise<Charity | null> {
-  if (hasSupabase) {
+  if (hasSupabaseCredentials) {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
@@ -92,7 +87,7 @@ export async function fetchCharityBySlug(slug: string): Promise<Charity | null> 
 
 /** Returns a single charity by ID. */
 export async function fetchCharityById(id: string): Promise<Charity | null> {
-  if (hasSupabase) {
+  if (hasSupabaseCredentials) {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();

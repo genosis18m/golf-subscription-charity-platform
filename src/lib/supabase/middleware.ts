@@ -6,17 +6,15 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { withTimeout } from '@/lib/with-timeout';
+import { hasSupabaseCredentials, supabaseAnonKey, supabaseUrl } from './config';
 
 const SUPABASE_REQUEST_TIMEOUT_MS = 2000;
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
   // If credentials aren't set, skip session management — return unauthenticated
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!hasSupabaseCredentials) {
     return { supabaseResponse, user: null };
   }
 

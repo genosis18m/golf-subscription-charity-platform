@@ -8,12 +8,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { withTimeout } from '@/lib/with-timeout';
 import { hasSupabaseAuthCookies } from './auth-cookies';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+import { hasSupabaseCredentials, supabaseAnonKey, supabaseUrl } from './config';
 const SUPABASE_REQUEST_TIMEOUT_MS = 2500;
-
-const hasCredentials = Boolean(supabaseUrl && supabaseAnonKey);
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -41,7 +37,7 @@ export async function createClient() {
 }
 
 export async function getAuthUser() {
-  if (!hasCredentials) return null;
+  if (!hasSupabaseCredentials) return null;
   try {
     const cookieStore = await cookies();
     if (!hasSupabaseAuthCookies(cookieStore.getAll())) return null;
@@ -63,7 +59,7 @@ export async function getAuthUser() {
 }
 
 export async function getUserProfile(userId: string) {
-  if (!hasCredentials) return null;
+  if (!hasSupabaseCredentials) return null;
   try {
     const supabase = await createClient();
     const { data, error } = await withTimeout(
@@ -83,7 +79,7 @@ export async function getUserProfile(userId: string) {
 }
 
 export async function getUserSubscription(userId: string) {
-  if (!hasCredentials) return null;
+  if (!hasSupabaseCredentials) return null;
   try {
     const supabase = await createClient();
     const { data, error } = await withTimeout(
