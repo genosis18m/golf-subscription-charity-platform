@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GOLF-Fego — Play, Win & Give Back
 
-## Getting Started
+**A premium golf charity subscription platform where your scores become your lucky numbers.**
 
-First, run the development server:
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://golf-subscription-charity-platform.vercel.app/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🌟 Overview
+
+GOLF-Fego is a modern platform that combines the passion for golf with charity support. Members subscribe monthly, enter their Stableford scores, and participate in manual and algorithmic draws for real prizes. A significant portion of every subscription goes directly to a charity of the member's choice.
+
+## 🚀 Key Features
+
+-   **Monthly Subscription Model:** Flexible plans (Monthly/Annual) with recurring revenue.
+-   **Skill-Based Draws:** Your recent Stableford scores are used as your draw entries, rewarding active play.
+-   **Charity Impact:** 10-30% of every subscription is donated to partner charities (Cancer Research UK, Oxfam, WWF, etc.).
+-   **Admin Dashboard:** Full control over draw simulations, winner verification, and charity management.
+-   **Real-time Leaderboards:** Track your performance and charity impact against other members.
+-   **Secure Payments:** Integrated with Stripe for seamless subscription management.
+
+## 💻 Tech Stack
+
+-   **Frontend:** [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [Lucide Icons](https://lucide.dev/)
+-   **Styling:** [Tailwind CSS 4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/)
+-   **Backend:** Next.js Server Actions & API Routes
+-   **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL & GoTrue)
+-   **Payments:** [Stripe](https://stripe.com/)
+-   **Email:** [Resend](https://resend.com/)
+
+## 📖 Getting Started
+
+To set up the project locally or deploy it to production, please refer to the [**Setup & Deployment Guide**](guide.md).
+
+---
+
+## 📈 Architecture
+
+```mermaid
+graph TD
+    User((User)) --> Web[Frontend - Next.js 16]
+    Web --> API[API Routes / Server Actions]
+    API --> DB[(Supabase Database)]
+    API --> Auth[Supabase Auth]
+    API --> Pay[Stripe Payments]
+    API --> Mail[Resend Email]
+    Admin((Admin)) --> Dashboard[Admin Dashboard]
+    Dashboard --> API
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Join 2,400+ golfers already playing with purpose.*

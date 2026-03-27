@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronRight, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export function LogoutButton() {
@@ -26,16 +27,14 @@ export function LogoutButton() {
           className="flex h-12 w-12 items-center justify-center rounded-full text-red-500"
           style={{ background: 'var(--bg-void)' }}
         >
-          <span className="material-symbols-outlined">logout</span>
+          <LogOut size={18} strokeWidth={2.2} aria-hidden="true" />
         </div>
         <div>
           <p className="font-bold text-red-500">Sign Out</p>
           <p className="text-xs text-red-500/60">End your current session</p>
         </div>
       </div>
-      <span className="material-symbols-outlined text-red-500/70 transition-transform group-hover:translate-x-1">
-        chevron_right
-      </span>
+      <ChevronRight size={18} strokeWidth={2.1} className="text-red-500/70 transition-transform group-hover:translate-x-1" aria-hidden="true" />
     </button>
   );
 }

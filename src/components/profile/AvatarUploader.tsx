@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AvatarUploaderProps {
@@ -10,12 +11,62 @@ interface AvatarUploaderProps {
   isDemo?: boolean;
 }
 
+function createPresetAvatarDataUrl({
+  start,
+  end,
+  accent,
+}: {
+  start: string;
+  end: string;
+  accent: string;
+}) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+      <defs>
+        <linearGradient id="bg" x1="14" y1="8" x2="104" y2="112" gradientUnits="userSpaceOnUse">
+          <stop stop-color="${start}" />
+          <stop offset="1" stop-color="${end}" />
+        </linearGradient>
+      </defs>
+      <rect width="120" height="120" rx="60" fill="url(#bg)" />
+      <circle cx="36" cy="34" r="18" fill="#F6F0E5" fill-opacity="0.12" />
+      <circle cx="88" cy="42" r="8" fill="#F6F0E5" fill-opacity="0.2" />
+      <circle cx="80" cy="82" r="24" fill="#F6F0E5" fill-opacity="0.08" />
+      <path d="M34 84C46 70 74 70 86 84" stroke="${accent}" stroke-width="8" stroke-linecap="round" />
+      <circle cx="60" cy="56" r="18" fill="#F6F0E5" fill-opacity="0.14" stroke="#F6F0E5" stroke-opacity="0.24" stroke-width="2" />
+      <circle cx="54" cy="50" r="2" fill="#F6F0E5" fill-opacity="0.9" />
+      <circle cx="66" cy="50" r="2" fill="#F6F0E5" fill-opacity="0.9" />
+      <circle cx="60" cy="58" r="2" fill="#F6F0E5" fill-opacity="0.9" />
+      <circle cx="52" cy="64" r="2" fill="#F6F0E5" fill-opacity="0.9" />
+      <circle cx="68" cy="64" r="2" fill="#F6F0E5" fill-opacity="0.9" />
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 const stockAvatars = [
-  'https://images.unsplash.com/photo-1592500055182-3d898ec651b7?auto=format&fit=crop&q=80&w=150&h=150',
-  'https://images.unsplash.com/photo-1587321526362-e91e5d71319c?auto=format&fit=crop&q=80&w=150&h=150',
-  'https://images.unsplash.com/photo-1593111774240-d529f12eb416?auto=format&fit=crop&q=80&w=150&h=150',
-  'https://images.unsplash.com/photo-1535133606992-068a045caaf4?auto=format&fit=crop&q=80&w=150&h=150',
-];
+  {
+    id: 'fairway',
+    label: 'Fairway',
+    url: createPresetAvatarDataUrl({ start: '#173D24', end: '#0D1A13', accent: '#4AFF6B' }),
+  },
+  {
+    id: 'sunrise',
+    label: 'Sunrise',
+    url: createPresetAvatarDataUrl({ start: '#5E3111', end: '#20140A', accent: '#F5A623' }),
+  },
+  {
+    id: 'midnight',
+    label: 'Midnight',
+    url: createPresetAvatarDataUrl({ start: '#15243A', end: '#0A101B', accent: '#7DD3FC' }),
+  },
+  {
+    id: 'heather',
+    label: 'Heather',
+    url: createPresetAvatarDataUrl({ start: '#3A1E39', end: '#120B18', accent: '#D8B4FE' }),
+  },
+] as const;
 
 export function AvatarUploader({ initialAvatarUrl, isDemo }: AvatarUploaderProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
@@ -95,31 +146,50 @@ export function AvatarUploader({ initialAvatarUrl, isDemo }: AvatarUploaderProps
 
   return (
     <div className="flex flex-wrap items-center gap-4">
-      {stockAvatars.map((url, index) => (
+      {stockAvatars.map(({ id, label, url }, index) => (
         <button
-          key={url}
+          key={id}
           onClick={() => updateProfileAvatar(url)}
-          className="flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden rounded-full p-0 transition-transform active:scale-95"
+          className="group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-full p-0 transition-transform active:scale-95"
           style={{
-            border: avatarUrl === url ? '2px solid var(--green)' : '2px solid transparent',
+            width: '76px',
+            height: '76px',
+            border: avatarUrl === url ? '2px solid var(--green)' : '1px solid var(--border-mid)',
             background: 'var(--bg-card)',
+            boxShadow: avatarUrl === url ? 'var(--green-glow)' : 'none',
           }}
-          aria-label={`Select preset avatar ${index + 1}`}
+          aria-label={`Select ${label} avatar preset`}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt={`Preset golf avatar ${index + 1}`} className="h-full w-full object-cover" />
+          <img src={url} alt={`${label} avatar preset ${index + 1}`} className="h-full w-full object-cover" />
+          <span
+            className="absolute inset-x-2 bottom-2 rounded-full px-2 py-1 text-center text-[9px] font-bold uppercase tracking-[0.18em]"
+            style={{
+              background: 'rgba(7,9,10,0.72)',
+              color: 'var(--cream)',
+              opacity: avatarUrl === url ? 1 : 0,
+              transition: 'opacity 0.18s ease',
+            }}
+          >
+            Active
+          </span>
         </button>
       ))}
 
       <div className="relative">
         <label
-          className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-full border border-[var(--border-bright)] bg-[var(--bg-card)] text-[var(--green)] transition-colors hover:scale-105 active:scale-95"
-          style={{ opacity: uploading ? 0.5 : 1, pointerEvents: uploading ? 'none' : 'auto' }}
+          className="flex cursor-pointer flex-col items-center justify-center rounded-full border border-[var(--border-bright)] bg-[var(--bg-card)] text-[var(--green)] transition-colors hover:scale-105 active:scale-95"
+          style={{
+            width: '76px',
+            height: '76px',
+            opacity: uploading ? 0.5 : 1,
+            pointerEvents: uploading ? 'none' : 'auto',
+          }}
         >
-          <span className="material-symbols-outlined">
-            {uploading ? 'hourglass_empty' : 'add_a_photo'}
+          <Upload size={18} strokeWidth={2.1} />
+          <span className="mt-2 text-[9px] font-bold uppercase tracking-[0.18em]">
+            {uploading ? 'Saving' : 'Upload'}
           </span>
-          <span className="mt-1 text-[8px] font-bold uppercase">{uploading ? 'Wait' : 'Upload'}</span>
           <input
             type="file"
             className="hidden"

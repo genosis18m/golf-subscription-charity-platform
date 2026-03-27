@@ -2,6 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  Banknote,
+  Circle,
+  CreditCard,
+  Gift,
+  Heart,
+  House,
+  LogOut,
+  Settings,
+  Target,
+  type LucideIcon,
+} from 'lucide-react';
 import { DASHBOARD_NAV_LINKS } from '@/constants';
 import { createClient } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
@@ -11,13 +23,14 @@ interface SidebarProps {
   profile: Profile | null;
 }
 
-const NAV_ICONS: Record<string, string> = {
-  '/dashboard': 'home',
-  '/dashboard/scores': 'golf_course',
-  '/dashboard/draws': 'redeem',
-  '/dashboard/charity': 'volunteer_activism',
-  '/dashboard/winnings': 'emoji_events',
-  '/dashboard/settings': 'settings',
+const NAV_ICONS: Record<string, LucideIcon> = {
+  home: House,
+  clipboard: Target,
+  trophy: Gift,
+  heart: Heart,
+  banknotes: Banknote,
+  'credit-card': CreditCard,
+  cog: Settings,
 };
 
 export function Sidebar({ profile }: SidebarProps) {
@@ -41,17 +54,17 @@ export function Sidebar({ profile }: SidebarProps) {
       <aside
         className="hidden shrink-0 lg:flex lg:flex-col"
         style={{
-          width: '224px',
-          minHeight: '100vh',
+          width: '240px',
+          minHeight: '100dvh',
           background: 'var(--bg-deep)',
           borderRight: '1px solid var(--border)',
           position: 'sticky',
           top: 0,
-          height: '100vh',
+          height: '100dvh',
           overflow: 'hidden auto',
         }}
       >
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ padding: '22px 20px 18px', borderBottom: '1px solid var(--border)' }}>
           <Link
             href="/dashboard"
             style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}
@@ -97,11 +110,12 @@ export function Sidebar({ profile }: SidebarProps) {
               padding: 0,
               display: 'flex',
               flexDirection: 'column',
-              gap: '2px',
+              gap: '4px',
             }}
           >
-            {DASHBOARD_NAV_LINKS.map(({ label, href }) => {
+            {DASHBOARD_NAV_LINKS.map(({ label, href, icon }) => {
               const isActive = href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
+              const Icon = NAV_ICONS[icon] ?? Circle;
               return (
                 <li key={href}>
                   <Link
@@ -109,27 +123,37 @@ export function Sidebar({ profile }: SidebarProps) {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '10px',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
+                      gap: '12px',
+                      padding: '11px 12px',
+                      borderRadius: '12px',
                       textDecoration: 'none',
                       fontSize: '13px',
                       fontFamily: 'var(--font-syne)',
                       fontWeight: isActive ? 700 : 500,
                       color: isActive ? 'var(--cream)' : 'var(--muted)',
-                      background: isActive ? 'rgba(74,255,107,0.08)' : 'transparent',
+                      background: isActive ? 'rgba(74,255,107,0.1)' : 'transparent',
+                      border: isActive ? '1px solid rgba(74,255,107,0.12)' : '1px solid transparent',
                       transition: 'all 0.12s',
                     }}
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: '16px', flexShrink: 0, opacity: isActive ? 1 : 0.65 }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '18px',
+                        height: '18px',
+                        flexShrink: 0,
+                        opacity: isActive ? 1 : 0.72,
+                      }}
                       aria-hidden="true"
                     >
-                      {NAV_ICONS[href] ?? 'radio_button_unchecked'}
+                      <Icon size={16} strokeWidth={isActive ? 2.4 : 2.1} />
                     </span>
-                    {label}
+                    <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {label}
+                    </span>
                     {isActive && (
                       <span
                         style={{
@@ -217,9 +241,7 @@ export function Sidebar({ profile }: SidebarProps) {
             }}
           >
             <span>Sign out</span>
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-              logout
-            </span>
+            <LogOut size={16} strokeWidth={2.1} aria-hidden="true" />
           </button>
         </div>
       </aside>
@@ -241,8 +263,9 @@ export function Sidebar({ profile }: SidebarProps) {
         }}
         aria-label="Mobile navigation"
       >
-        {DASHBOARD_NAV_LINKS.slice(0, 4).map(({ label, href }) => {
+        {DASHBOARD_NAV_LINKS.slice(0, 4).map(({ label, href, icon }) => {
           const isActive = href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
+          const Icon = NAV_ICONS[icon] ?? Circle;
           return (
             <Link
               key={href}
@@ -262,8 +285,8 @@ export function Sidebar({ profile }: SidebarProps) {
                 minWidth: 0,
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
-                {NAV_ICONS[href] ?? 'radio_button_unchecked'}
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden="true">
+                <Icon size={18} strokeWidth={isActive ? 2.4 : 2.1} />
               </span>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {label.split(' ')[0]}

@@ -1,5 +1,17 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import type { LucideIcon } from 'lucide-react';
+import {
+  Bell,
+  Camera,
+  ChevronRight,
+  CreditCard,
+  Gift,
+  HandHeart,
+  Lock,
+  Medal,
+  Target,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getDemoSession, DEMO_COOKIE, DEMO_USERS } from '@/lib/demo-auth';
 import { DRAW_DEFAULT_DAY } from '@/constants';
@@ -13,24 +25,33 @@ export const metadata: Metadata = { title: 'Member Profile' };
 
 const preferenceItems = [
   {
-    icon: 'notifications',
+    icon: Bell,
     title: 'Push Notifications',
     description: 'Alerts for draw entries and winner announcements',
     enabled: true,
+    action: 'toggle',
   },
   {
-    icon: 'lock',
+    icon: Lock,
     title: 'Privacy Mode',
     description: 'Keep your stats hidden from public leaderboards',
     enabled: false,
+    action: 'toggle',
   },
   {
-    icon: 'credit_card',
+    icon: CreditCard,
     title: 'Payment Methods',
     description: 'Mastercard ending in 4421',
     enabled: false,
+    action: 'link',
   },
-] as const;
+] as const satisfies ReadonlyArray<{
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  enabled: boolean;
+  action: 'toggle' | 'link';
+}>;
 
 function getNextDrawDate() {
   const now = new Date();
@@ -57,6 +78,8 @@ export default async function ProfilePage() {
     winsCount: number;
     avatarUrl: string | null;
     userId: string;
+    golfClub: string | null;
+    charityName: string;
   } = {
     fullName: demoSession ? demoSession.name : DEMO_USERS.user.full_name,
     createdAt: '2023-08-15T00:00:00Z',
@@ -67,6 +90,8 @@ export default async function ProfilePage() {
     winsCount: 4,
     avatarUrl: null,
     userId: demoSession ? demoSession.userId : 'demo-user-id',
+    golfClub: DEMO_USERS.user.golf_club,
+    charityName: DEMO_USERS.user.charity_name,
   };
 
   if (!demoSession) {
@@ -88,7 +113,7 @@ export default async function ProfilePage() {
       ]);
 
       const profile = profileResult.data as Profile | null;
-      const subscription = subscriptionResult.data as Subscription | null;
+      const subscription = subscriptionResult.data as (Subscription & { charity?: { name: string } | null }) | null;
       const winners = (winnersResult.data ?? []) as Winner[];
 
       if (profile) {
@@ -96,18 +121,17 @@ export default async function ProfilePage() {
         profileData.createdAt = profile.created_at;
         profileData.handicap = profile.handicap ?? 0;
         profileData.avatarUrl = profile.avatar_url;
+        profileData.golfClub = profile.golf_club;
       }
 
       profileData.userId = user.id;
 
       if (subscription) {
         profileData.planId = subscription.plan_id;
-        const monthsActive = Math.ceil(
-          (Date.now() - new Date(subscription.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30)
+        profileData.totalDonated = Math.floor(
+          (subscription.plan_id === 'yearly' ? 25000 : 2500) * subscription.charity_contribution_pct
         );
-
-        profileData.totalDonated =
-          Math.floor(2500 * subscription.charity_contribution_pct) * Math.max(1, monthsActive);
+        profileData.charityName = subscription.charity?.name ?? 'Selected charity';
       }
 
       profileData.winsCount = winners.length;
@@ -129,68 +153,121 @@ export default async function ProfilePage() {
   const memberTier = profileData.planId === 'yearly' ? 'Eagle Member' : 'Member';
   const nextDrawDate = getNextDrawDate();
   const drawMonth = new Date(nextDrawDate).toLocaleDateString('en-GB', { month: 'long' });
+  const handicapLabel = profileData.handicap > 0 ? String(profileData.handicap) : 'N/A';
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10 pb-12">
-      <section className="flex flex-col gap-8 md:flex-row md:items-end">
-        <div className="relative group">
-          <div
-            className="absolute inset-0 scale-75 rounded-full transition-transform group-hover:scale-100"
-            style={{ background: 'var(--green-muted)', filter: 'blur(30px)' }}
-          />
-          <div
-            className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-4 shadow-2xl md:h-48 md:w-48"
-            style={{ borderColor: 'var(--bg-card)', background: 'var(--bg-card)' }}
-          >
-            {profileData.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profileData.avatarUrl} alt="Member avatar" className="h-full w-full object-cover" />
-            ) : (
-              <span
-                style={{ fontSize: '4rem', fontFamily: 'var(--font-display)', fontWeight: 800, color: 'var(--green)' }}
-              >
-                {initials}
-              </span>
-            )}
-          </div>
-          <div
-            className="absolute bottom-2 right-2 rounded-full p-2 shadow-lg"
-            style={{ background: 'var(--green)', color: 'var(--bg-void)' }}
-          >
-            <span className="material-symbols-outlined text-base">photo_camera</span>
-          </div>
-        </div>
-
-        <div className="flex-1 text-center md:text-left">
-          <h1 className="display-heading mb-2 text-4xl uppercase leading-tight md:text-6xl">
-            Member Profile
-          </h1>
-
-          <div className="mt-2 flex flex-col items-center gap-3 md:flex-row">
-            <span className="serif-accent text-2xl md:text-3xl" style={{ color: 'var(--gold)' }}>
-              {memberTier}
-            </span>
-            <span
-              className="hidden h-1 w-1 rounded-full md:block"
-              style={{ background: 'var(--border-mid)' }}
+    <div className="mx-auto max-w-5xl space-y-8 pb-12">
+      <section
+        className="relative overflow-hidden rounded-[2rem] border p-6 md:p-8"
+        style={{
+          background:
+            'radial-gradient(circle at top left, rgba(74,255,107,0.12), transparent 34%), radial-gradient(circle at right center, rgba(245,166,35,0.08), transparent 28%), var(--bg-card)',
+          borderColor: 'var(--border)',
+        }}
+      >
+        <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+          <div className="relative mx-auto w-fit lg:mx-0">
+            <div
+              className="absolute inset-0 scale-90 rounded-full"
+              style={{ background: 'var(--green-muted)', filter: 'blur(38px)' }}
             />
-            <span
+            <div
+              className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-4 shadow-2xl md:h-48 md:w-48"
+              style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'var(--bg-void)' }}
+            >
+              {profileData.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profileData.avatarUrl} alt="Member avatar" className="h-full w-full object-cover" />
+              ) : (
+                <span
+                  style={{ fontSize: '4rem', fontFamily: 'var(--font-display)', fontWeight: 800, color: 'var(--green)' }}
+                >
+                  {initials}
+                </span>
+              )}
+            </div>
+            <div
+              className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center rounded-full border shadow-lg"
               style={{
-                color: 'var(--muted)',
-                fontSize: '14px',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                fontWeight: 600,
+                background: 'rgba(7,9,10,0.92)',
+                color: 'var(--green)',
+                borderColor: 'rgba(74,255,107,0.22)',
               }}
             >
-              Joined {joinDate}
-            </span>
+              <Camera size={18} strokeWidth={2.1} aria-hidden="true" />
+            </div>
           </div>
 
-          <div className="mt-6">
-            <a href="#profile-settings" className="btn btn-primary btn-sm rounded-full font-bold">
-              Manage Preferences
-            </a>
+          <div className="space-y-5 text-center lg:text-left">
+            <div className="space-y-3">
+              <p
+                className="text-[11px] font-bold uppercase tracking-[0.28em]"
+                style={{ color: 'var(--muted)' }}
+              >
+                Member Profile
+              </p>
+              <h1 className="display-heading text-4xl leading-none md:text-5xl">
+                {profileData.fullName}
+              </h1>
+              <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <span
+                  className="rounded-full px-4 py-1.5 text-sm font-bold"
+                  style={{
+                    background: 'var(--gold-muted)',
+                    color: 'var(--gold)',
+                    border: '1px solid rgba(245,166,35,0.18)',
+                  }}
+                >
+                  {memberTier}
+                </span>
+                <span
+                  className="rounded-full px-4 py-1.5 text-sm font-semibold"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    color: 'var(--cream-dim)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  Joined {joinDate}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
+              <span
+                className="rounded-full px-4 py-2 text-sm"
+                style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--cream)' }}
+              >
+                Supporting {profileData.charityName}
+              </span>
+              <span
+                className="rounded-full px-4 py-2 text-sm"
+                style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--cream)' }}
+              >
+                {profileData.golfClub ?? 'Home club not set'}
+              </span>
+            </div>
+
+            <p className="max-w-2xl text-sm leading-relaxed" style={{ color: 'var(--cream-dim)' }}>
+              Keep your profile current, refresh your avatar, and stay on top of your draw activity from one clean member hub.
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
+              <a href="#profile-settings" className="btn btn-primary btn-sm rounded-full font-bold">
+                Manage Preferences
+              </a>
+              <div
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  color: 'var(--cream)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                <Medal size={15} strokeWidth={2.1} aria-hidden="true" style={{ color: 'var(--gold)' }} />
+                {profileData.winsCount} paid wins
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -206,7 +283,7 @@ export default async function ProfilePage() {
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <article className="glass-card relative flex min-h-[160px] flex-col justify-between rounded-[1rem] p-8">
           <div className="flex items-start justify-between">
             <span
@@ -220,16 +297,14 @@ export default async function ProfilePage() {
             >
               Wins
             </span>
-            <span className="material-symbols-outlined text-[28px]" style={{ color: 'var(--gold)' }}>
-              emoji_events
-            </span>
+            <Medal size={28} strokeWidth={2.1} aria-hidden="true" style={{ color: 'var(--gold)' }} />
           </div>
           <div className="mt-4">
             <p className="text-4xl font-black" style={{ fontFamily: 'var(--font-display)' }}>
               {profileData.winsCount}
             </p>
             <p className="mt-1 text-sm" style={{ color: 'var(--gold)' }}>
-              Paid results confirmed
+              {formatCurrency(profileData.totalWinnings)} confirmed payouts
             </p>
           </div>
         </article>
@@ -247,13 +322,14 @@ export default async function ProfilePage() {
             >
               Charity Impact
             </span>
-            <span className="material-symbols-outlined text-[28px]" style={{ color: 'var(--green)' }}>
-              volunteer_activism
-            </span>
+            <HandHeart size={28} strokeWidth={2.1} aria-hidden="true" style={{ color: 'var(--green)' }} />
           </div>
           <div className="mt-4">
             <p className="text-3xl font-black" style={{ fontFamily: 'var(--font-display)' }}>
               {formatCurrency(profileData.totalDonated)}
+            </p>
+            <p className="mt-1 text-sm" style={{ color: 'var(--cream-dim)' }}>
+              Current cycle support for {profileData.charityName}
             </p>
             <div
               className="mt-4 h-1.5 w-full overflow-hidden rounded-full"
@@ -283,9 +359,7 @@ export default async function ProfilePage() {
             >
               Handicap
             </span>
-            <span className="material-symbols-outlined text-[28px]" style={{ color: 'var(--green)' }}>
-              golf_course
-            </span>
+            <Target size={28} strokeWidth={2.1} aria-hidden="true" style={{ color: 'var(--green)' }} />
           </div>
           <div className="mt-4 flex items-center justify-between">
             <div
@@ -297,15 +371,15 @@ export default async function ProfilePage() {
               }}
             >
               <span className="text-2xl font-black" style={{ color: 'var(--green)' }}>
-                {profileData.handicap}
+                {handicapLabel}
               </span>
             </div>
             <div className="text-right">
               <p className="mb-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--muted)' }}>
-                Positioning
+                Home Club
               </p>
-              <p className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                Top 15%
+              <p className="max-w-[170px] text-lg font-bold leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                {profileData.golfClub ?? 'Add your club'}
               </p>
             </div>
           </div>
@@ -327,7 +401,7 @@ export default async function ProfilePage() {
                   borderColor: 'rgba(245,166,35,0.2)',
                 }}
               >
-                <span className="material-symbols-outlined text-sm">redeem</span>
+                <Gift size={14} strokeWidth={2.1} aria-hidden="true" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Active Draw</span>
               </div>
               <h2 className="text-2xl font-black leading-tight md:text-4xl" style={{ fontFamily: 'var(--font-display)' }}>
@@ -367,53 +441,56 @@ export default async function ProfilePage() {
         </div>
 
         <div className="space-y-4 lg:col-span-8">
-          {preferenceItems.map((item, index) => (
-            <div
-              key={item.title}
-              className="group flex cursor-pointer items-center justify-between rounded-2xl p-6 transition-colors hover:bg-[var(--bg-card)]"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid transparent' }}
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="flex h-12 w-12 items-center justify-center rounded-full"
-                  style={{ background: 'var(--bg-void)' }}
-                >
-                  <span className="material-symbols-outlined" style={{ color: 'var(--muted)' }}>
-                    {item.icon}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-bold">{item.title}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                    {item.description}
-                  </p>
-                </div>
-              </div>
+          {preferenceItems.map((item) => {
+            const Icon = item.icon;
 
-              {index === 2 ? (
-                <span
-                  className="material-symbols-outlined opacity-50 transition-transform group-hover:translate-x-1"
-                  style={{ color: 'var(--muted)' }}
-                >
-                  chevron_right
-                </span>
-              ) : (
-                <div
-                  className="relative h-6 w-12 rounded-full p-1"
-                  style={{ background: item.enabled ? 'var(--green-muted)' : 'var(--bg-void)' }}
-                >
+            return (
+              <div
+                key={item.title}
+                className="group flex cursor-pointer items-center justify-between rounded-2xl p-6 transition-colors hover:bg-[var(--bg-card)]"
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid transparent' }}
+              >
+                <div className="flex items-center gap-4">
                   <div
-                    className="absolute h-4 w-4 rounded-full"
-                    style={{
-                      background: item.enabled ? 'var(--green)' : 'var(--muted)',
-                      right: item.enabled ? '4px' : 'auto',
-                      left: item.enabled ? 'auto' : '4px',
-                    }}
-                  />
+                    className="flex h-12 w-12 items-center justify-center rounded-full"
+                    style={{ background: 'var(--bg-void)' }}
+                  >
+                    <Icon size={18} strokeWidth={2.1} aria-hidden="true" style={{ color: 'var(--muted)' }} />
+                  </div>
+                  <div>
+                    <p className="font-bold">{item.title}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {item.action === 'link' ? (
+                  <ChevronRight
+                    size={18}
+                    strokeWidth={2.1}
+                    className="opacity-50 transition-transform group-hover:translate-x-1"
+                    style={{ color: 'var(--muted)' }}
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <div
+                    className="relative h-6 w-12 rounded-full p-1"
+                    style={{ background: item.enabled ? 'var(--green-muted)' : 'var(--bg-void)' }}
+                  >
+                    <div
+                      className="absolute h-4 w-4 rounded-full"
+                      style={{
+                        background: item.enabled ? 'var(--green)' : 'var(--muted)',
+                        right: item.enabled ? '4px' : 'auto',
+                        left: item.enabled ? 'auto' : '4px',
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           <LogoutButton />
         </div>
