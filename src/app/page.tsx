@@ -1,14 +1,13 @@
 /**
  * Root page at "/".
- * app/page.tsx takes precedence over (public)/page.tsx for the "/" route.
- * We render the full public layout (Navbar + homepage) here directly.
+ * We render the homepage directly here and reuse the public-page component.
  */
 
 import { Navbar } from '@/components/layout/Navbar';
-import HomePage from './(public)/page';
+import HomePage from './(public)/HomePage';
 import { getAuthUser } from '@/lib/supabase/server';
 
-export { metadata } from './(public)/page';
+export { homePageMetadata as metadata, revalidate } from './(public)/HomePage';
 
 export default async function RootPage() {
   const user = await getAuthUser();

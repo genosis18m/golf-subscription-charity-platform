@@ -11,7 +11,7 @@ import { fetchFeaturedCharities } from '@/lib/data/charities';
 import { SUBSCRIPTION_PLANS } from '@/constants';
 import type { Charity } from '@/types';
 
-export const metadata: Metadata = {
+export const homePageMetadata: Metadata = {
   title: 'GOLF-Fego — Play, Win & Give Back',
 };
 
